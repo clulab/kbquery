@@ -1,6 +1,6 @@
-name := "processors-server"
+name := "kbquery"
 
-version := "1.0"
+version := "0.0.4"
 
 scalaVersion := "2.11.8"
 
@@ -14,6 +14,8 @@ connectInput in run := true
 outputStrategy := Some(StdoutOutput)
 
 organization  := "clulab"
+
+resolvers += Resolver.bintrayRepo("hseeberger", "maven")
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
@@ -39,6 +41,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"           %%  "akka-http-core"                     % akkaHTTPV,
     "com.typesafe.akka"           %%  "akka-http"                          % akkaHTTPV,
     "com.typesafe.akka"           %%  "akka-http-testkit"                  % akkaHTTPV,
+    "com.typesafe.akka"           %%  "akka-http-xml"                      % akkaHTTPV,
 
     // testing
     "org.specs2"                  %%  "specs2-core"                        % "2.3.11"  % "test",

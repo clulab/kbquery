@@ -6,34 +6,32 @@ import com.typesafe.config.{ ConfigValueFactory, ConfigFactory }
 import service.Service
 import utils._
 
-
-object NLPServer extends App with Service {
+object KBQueryServer extends App with Service {
 
   ServerConfig.initializeResources
 
   val argMap = buildArgMap(ServerConfig.defaults, args.toList)
 
-  val p: Int = argMap(ServerConfig.port).toInt
-  val h: String = argMap(ServerConfig.host)
+  val port: Int = argMap(ServerConfig.port).toInt
+  val host: String = argMap(ServerConfig.host)
 
   // Update config with values from command line
   val config = ServerConfig.defaultConfig
-    .withValue(ServerConfig.defaultHostName, ConfigValueFactory.fromAnyRef(h))
-    .withValue(ServerConfig.defaultPort, ConfigValueFactory.fromAnyRef(p))
+    .withValue(ServerConfig.defaultHostName, ConfigValueFactory.fromAnyRef(host))
+    .withValue(ServerConfig.defaultPort, ConfigValueFactory.fromAnyRef(port))
 
   override implicit val system: ActorSystem = ActorSystem("processors-courier", config)
   override implicit val executionContext = system.dispatcher
   override implicit val materializer = ActorMaterializer()
   override val logger = Logging(system, getClass)
 
-  val bindingFuture =  Http().bindAndHandle(handler = routes, interface = h, port = p)
+  val bindingFuture =  Http().bindAndHandle(handler = routes, interface = host, port = port)
 
-  logger.info(s"Server online at http://$h:$p")
+  logger.info(s"Server online at http://$host:$port")
 }
 
-/**
- * Server configuration
- */
+
+/** Server configuration */
 object ServerConfig {
 
   val defaultConfig = ConfigFactory.load()
@@ -41,12 +39,13 @@ object ServerConfig {
   val host = "host"
   val defaultPort = defaultConfig.getString("akka.http.server.port")
   val defaultHostName = defaultConfig.getString("akka.http.server.host")
-  val defaults = Map(
+  val defaults = Map (
     port -> defaultPort,
     host -> defaultHostName
   )
 
   def initializeResources: Unit = {
-    val _ = processors.ProcessorsBridge.defaultProc.annotate("blah")
+    // val _ = do long initialization here at startup
   }
+
 }

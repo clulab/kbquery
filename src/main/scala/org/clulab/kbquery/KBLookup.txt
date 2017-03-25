@@ -1,0 +1,38 @@
+
+  /** Return resolutions for the set of KB entries for the given NS/ID string. */
+  def lookupNsId (nsId:String): Resolutions = newResolutions(nsidMap.getOrElse(nsId.trim, NoEntries))
+
+  /** Return resolutions for the set of KB entries for the given namespace and ID strings. */
+  def lookupNsId (namespace:String, id:String): Resolutions =
+    lookupNsId(makeNamespaceId(namespace, id)) // trimming handled in makeNamespaceId
+
+  /** Try lookups for all given NS/IDs until one succeeds or all fail. */
+  def lookupNsIds (nsIds: Set[String]): Resolutions = newResolutions(lookupEntries(nsIds))
+
+  /** Return the set of species for the entries mapped by the given NS/ID key. */
+  def speciesForNsId (nsId:String): SpeciesNameSet =
+    nsidMap.getOrElse(nsId.trim, NoEntries).map(_.species).filter(_ != NoSpeciesValue).toSet
+
+
+  /** Return resolutions for the set of all KB entries for the given text string. */
+  def lookup (text:String): Resolutions = newResolutions(search(text, None))
+
+  /** Find the set of KB entries, for the given text string, which match the given
+      single species. Returns resolutions for matching entries or None. */
+  def lookupByASpecies (text:String, species:String): Resolutions =
+    newResolutions(search(text, Some((kbe:KBEntry) => kbe.species == species)))
+
+  /** Finds the set of KB entries, for the given text string, which contains a species
+      in the given set of species. Returns resolutions for matching entries or None. */
+ def lookupBySpecies (text:String, speciesSet:SpeciesNameSet): Resolutions =
+   newResolutions(search(text, Some((kbe:KBEntry) => isMemberOf(kbe.species, speciesSet))))
+
+  /** Finds the set of KB entries, for the given text string, which have humans as the species.
+      Returns resolutions for matching entries or None. */
+  def lookupHuman (text:String): Resolutions =
+    newResolutions(search(text, Some((kbe:KBEntry) => isHumanSpecies(kbe.species))))
+
+  /** Find the set of KB entries, for the given text string, which do not contain a species.
+      Returns resolutions for matching entries or None. */
+  def lookupNoSpecies (text:String): Resolutions =
+    newResolutions(search(text, Some((kbe:KBEntry) => kbe.hasNoSpecies)))

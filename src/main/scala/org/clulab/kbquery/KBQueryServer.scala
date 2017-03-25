@@ -1,20 +1,19 @@
 package org.clulab.kbquery
 
+import scala.annotation.tailrec
+import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
+
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
-import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
-import org.clulab.kbquery.service.Service
-import scala.annotation.tailrec
-
 
 /**
   * App to    
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
   *   Last Modified: Refactor configuration. Add class docs.
   */
-object KBQueryServer extends App with Service {
+object KBQueryServer extends App with KBQService {
 
   // Support methods
 
@@ -66,6 +65,7 @@ object KBQueryServer extends App with Service {
   override implicit val system: ActorSystem = ActorSystem("akka", config)
   override implicit val executionContext = system.dispatcher
   override implicit val materializer = ActorMaterializer()
+
   override val logger = Logging(system, getClass)
 
   val routes = makeRoutes(config)

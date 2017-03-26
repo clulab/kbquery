@@ -8,7 +8,7 @@ case class NsId (
 
 /** Represent namespace and ID strings separately. */
 case class NsAndId (
-  val namespace: String,
+  val ns: String,
   val id: String
 ) extends Message
 

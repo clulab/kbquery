@@ -20,7 +20,7 @@ import akka.stream.Materializer
 /**
   * Trait to provide an Akka HTTP service using Json4s support for marshalling.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Add text synonyms lookup stub.
+  *   Last Modified: Add corresponding kblu POST paths to route.
   */
 trait KBQService extends Json4sSupport {
 
@@ -44,7 +44,7 @@ trait KBQService extends Json4sSupport {
 
     val routes = {
       logRequestResult("kbquery-microservice") {    // wrap contained paths in logger
-        get {
+        get {                               // GETS
           pathPrefix("kblu") {
             path("byText") {                        // by text string
               parameters("text") { text =>
@@ -78,7 +78,33 @@ trait KBQService extends Json4sSupport {
             complete( ("version" -> appVersion) )
           }
         } ~
-        post {
+        post {                              // POSTS
+          pathPrefix("kblu") {
+            path("byText") {                        // by text string
+              entity(as[msg.TextMessage]) { msg =>
+                logger.info(s"POST kblu/byText -> ${msg}")
+                complete(KBLookup.lookup(msg.text))
+              }
+            } ~
+            path("byNsId") {                        // by NS/ID string
+              entity(as[msg.NsId]) { msg =>
+                logger.info(s"POST kblu/byNsId -> ${msg}")
+                complete(KBLookup.lookupNsId(msg.nsId))
+              }
+            } ~
+            path("byNsAndId") {                     // by namespace and ID
+              entity(as[msg.NsAndId]) { msg =>
+                logger.info(s"POST kblu/byNsAndId -> ${msg}")
+                complete(KBLookup.lookupNsAndId(msg.ns, msg.id))
+              }
+            } ~
+            path("synonyms") {                      // synonym texts for NS/ID string
+              entity(as[msg.NsId]) { msg =>
+                logger.info(s"POST kblu/synonyms -> ${msg}")
+                complete(KBLookup.synonyms(msg.nsId))
+              }
+            }
+          } ~
           path("shutdown") {                        // shut down the server
             // complete request and then shut down the server in 1 second
             complete {

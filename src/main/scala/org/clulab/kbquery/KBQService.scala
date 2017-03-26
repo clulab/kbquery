@@ -18,6 +18,11 @@ import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
 
+/**
+  * Trait to provide an Akka HTTP service using Json4s support for marshalling.
+  *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
+  *   Last Modified: First working GET stub.
+  */
 trait KBQService extends Json4sSupport {
 
   implicit val serialization = jackson.Serialization // or native.Serialization
@@ -39,32 +44,25 @@ trait KBQService extends Json4sSupport {
     val appVersion = config.getString("app.version")
 
     val routes = {
-      logRequestResult("kbquery-microservice") { // wrap contained paths in logger
+      logRequestResult("kbquery-microservice") {    // wrap contained paths in logger
         get {
-          path("") {                               // index page
+          pathPrefix("kblu") {
+            path("byNsId") {
+              parameters("nsId") { nsId =>
+                logger.info(s"GET kblu/byNsId -> ${nsId}")
+                complete(KBLookup.lookupNsId(nsId))
+              }
+            }
+          } ~
+          path("") {                                // index page
             getFromResource("static/index.html")
           } ~
-          path("version") {                        // show version
-            val html =
-              <html>
-                <body>
-                  <h2><code>kbquery</code> version {appVersion}</h2>
-                </body>
-              </html>
-            complete(html)
-          }  // REMOVE WHEN UNCOMMENTING NEXT
-          // } ~
-          // path("kblu" / "byNsId") {
-          //   entity(as[api.NsIdMessage]) { msg =>
-          //     logger.info(s"GET kblu/byNsId -> ${msg.nsId}")
-          //     val kbes = KBLookup.lookupNsId(msg.nsId)
-          //     val json = ConverterUtils.toJson(kbes)
-          //     complete(json)
-          //   }
-          // }
+          path("version") {                         // show version
+            complete( ("version" -> appVersion) )
+          }
         } ~
         post {
-          path("shutdown") {                     // shut down the server
+          path("shutdown") {                        // shut down the server
             // complete request and then shut down the server in 1 second
             complete {
               in (1.second) {

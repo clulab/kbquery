@@ -64,7 +64,7 @@ object KBQueryServer extends App with KBQService {
 
   override implicit val system: ActorSystem = ActorSystem("akka", config)
   override implicit val executionContext = system.dispatcher
-  override implicit val materializer = ActorMaterializer()
+  override implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   override val logger = Logging(system, getClass)
 

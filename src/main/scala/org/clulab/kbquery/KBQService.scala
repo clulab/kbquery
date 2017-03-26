@@ -12,7 +12,6 @@ import org.json4s.{ Formats, DefaultFormats, jackson, native }
 
 import akka.actor.ActorSystem
 import akka.event.{ LoggingAdapter, Logging }
-// import akka.http.javadsl.model._
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.Directives._

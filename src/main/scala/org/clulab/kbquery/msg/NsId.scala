@@ -1,6 +1,6 @@
 package org.clulab.kbquery.msg
 
-/** Represent a single namespace:ID string. */
+/** Represent a single NS/ID string. */
 case class NsId (
   val nsId: String                          // in the form 'namespace:id'
 ) extends Message
@@ -13,7 +13,7 @@ case class NsAndId (
 ) extends Message
 
 
-/** A Set of namespace:ID strings. */
+/** A Set of NS/ID strings. */
 case class NsIds (
   val nsIds: List[NsId]                     // convey the set as a List for convenience
 ) extends Message

@@ -26,7 +26,7 @@ object Species {
   /** A set of label strings for humans, found in KBs. */
   val HumanLabels: Set[String] = Set[String]("homo sapiens", "human")
 
-  /** Default value for human species namespace:ID string (NCBI Taxonomy). */
+  /** Default value for human species NS:ID string (NCBI Taxonomy). */
   val HumanNsId: String = "taxonomy:9606"
 
   /** A set of species strings for humans, found in the knowledge bases. */

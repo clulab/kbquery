@@ -18,7 +18,7 @@ import org.clulab.kbquery.msg._
 /**
   * Unit tests of the KBQ service class.
   *   Written by: Tom Hicks. 3/26/2017.
-  *   Last Modified: Add test for lookup by text.
+  *   Last Modified: Add tests for lookup by NsId and NsAndId.
   */
 class TestKBQService extends FlatSpec
     with MustMatchers
@@ -53,6 +53,38 @@ class TestKBQService extends FlatSpec
       (entry.namespace) must equal ("uniprot")
       (entry.id) must equal ("P31749")
       (entry.label) must equal ("Gene_or_gene_product")
+      (entry.isGeneName) must be (false)
+      (entry.isShortName) must be (false)
+    }
+  }
+
+  it should "lookup by nsId" in {
+    Get("/kblu/byNsId?nsId=myNamespace:XYZ") ~> route ~> check {
+      status must equal(StatusCodes.OK)
+      val resp = responseAs[KBEntries]
+      (resp.entries) must not be (empty)
+      (resp.entries.size) must be (3)
+      val entry = resp.entries(0)
+      (entry.text) must equal ("textA")
+      (entry.namespace) must equal ("myNamespace")
+      (entry.id) must equal ("XYZ-A")
+      (entry.label) must equal ("Gene_or_gene_product")
+      (entry.isGeneName) must be (false)
+      (entry.isShortName) must be (false)
+    }
+  }
+
+  it should "lookup by namespace and ID" in {
+    Get("/kblu/byNsAndId?ns=NEW_NS&id=QQQ") ~> route ~> check {
+      status must equal(StatusCodes.OK)
+      val resp = responseAs[KBEntries]
+      (resp.entries) must not be (empty)
+      (resp.entries.size) must be (3)
+      val entry = resp.entries(0)
+      (entry.text) must equal ("textD")
+      (entry.namespace) must equal ("NEW_NS")
+      (entry.id) must equal ("QQQ-D")
+      (entry.label) must equal ("Simple_chemical")
       (entry.isGeneName) must be (false)
       (entry.isShortName) must be (false)
     }

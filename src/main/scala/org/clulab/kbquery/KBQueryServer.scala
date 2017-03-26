@@ -9,7 +9,7 @@ import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 
 /**
-  * App to    
+  * App to query knowledge bases via Akka HTTP service.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
   *   Last Modified: Refactor configuration. Add class docs.
   */

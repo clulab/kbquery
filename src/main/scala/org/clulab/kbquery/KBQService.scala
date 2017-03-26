@@ -21,7 +21,7 @@ import akka.stream.Materializer
 /**
   * Trait to provide an Akka HTTP service using Json4s support for marshalling.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Rename to NsAndId.
+  *   Last Modified: Add lookup by text string stub.
   */
 trait KBQService extends Json4sSupport {
 
@@ -47,6 +47,12 @@ trait KBQService extends Json4sSupport {
       logRequestResult("kbquery-microservice") {    // wrap contained paths in logger
         get {
           pathPrefix("kblu") {
+            path("byText") {                        // by text string
+              parameters("text") { text =>
+                logger.info(s"GET kblu/byText -> ${text}")
+                complete(KBLookup.lookup(text))
+              }
+            } ~
             path("byNsId") {                        // by NS/ID string
               parameters("nsId") { nsId =>
                 logger.info(s"GET kblu/byNsId -> ${nsId}")

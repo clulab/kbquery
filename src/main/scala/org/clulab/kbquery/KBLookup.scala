@@ -5,7 +5,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton class implementing knowledge base lookup and manipulation methods.
   *   Written by: Tom Hicks. 3/25/2017.
-  *   Last Modified: Rename to NsAndId.
+  *   Last Modified: Add lookup by text string stub.
   */
 object KBLookup {
 
@@ -20,8 +20,8 @@ object KBLookup {
       val ns = parts(0)
       val id = parts(1)
       return KBEntries(List(                // DUMMY DATA: IMPLEMENT LATER
-        KBEntry("textA", ns, s"${id}-A", "Protein"),
-        KBEntry("textB", ns, s"${id}-B", "Protein"),
+        KBEntry("textA", ns, s"${id}-A", "Gene_or_gene_product"),
+        KBEntry("textB", ns, s"${id}-B", "Gene_or_gene_product"),
         KBEntry("textC", ns, s"${id}-C", "Family")
       ))
     }
@@ -33,7 +33,7 @@ object KBLookup {
     return KBEntries(List(                // DUMMY DATA: IMPLEMENT LATER
       KBEntry("textD", ns, s"${id}-D", "Simple_chemical"),
       KBEntry("textE", ns, s"${id}-E", "Family"),
-      KBEntry("textF", ns, s"${id}-F", "Protein")
+      KBEntry("textF", ns, s"${id}-F", "Gene_or_gene_product")
     ))
   }
 
@@ -45,8 +45,12 @@ object KBLookup {
  //    nsidMap.getOrElse(nsId.trim, NoEntries).map(_.species).filter(_ != NoSpeciesValue).toSet
 
 
- //  /** Return resolutions for the set of all KB entries for the given text string. */
- //  def lookup (text:String): Resolutions = newResolutions(search(text, None))
+  /** Return the (possibly empty) set of all KB entries for the given text string. */
+  def lookup (text: String): KBEntries = {
+    return KBEntries(List(                // DUMMY DATA: IMPLEMENT LATER
+      KBEntry("AKT1", "uniprot", "P31749", "Gene_or_gene_product")
+    ))
+  }
 
  //  /** Find the set of KB entries, for the given text string, which match the given
  //      single species. Returns resolutions for matching entries or None. */

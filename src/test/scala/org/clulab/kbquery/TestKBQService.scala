@@ -18,7 +18,7 @@ import org.clulab.kbquery.msg._
 /**
   * Unit tests of the KBQ service class.
   *   Written by: Tom Hicks. 3/26/2017.
-  *   Last Modified: Add tests for lookup by NsId and NsAndId.
+  *   Last Modified: Add test for synonyms.
   */
 class TestKBQService extends FlatSpec
     with MustMatchers
@@ -87,6 +87,19 @@ class TestKBQService extends FlatSpec
       (entry.label) must equal ("Simple_chemical")
       (entry.isGeneName) must be (false)
       (entry.isShortName) must be (false)
+    }
+  }
+
+  it should "lookup synonyms by nsId" in {
+    Get("/kblu/synonyms?nsId=uniprot:Q13131") ~> route ~> check {
+      status must equal(StatusCodes.OK)
+      val resp = responseAs[Synonyms]
+      (resp.synonyms) must not be (empty)
+      (resp.synonyms.size) must be (4)
+      (resp.synonyms) must contain ("AMPKa1")
+      (resp.synonyms) must contain ("AMPK-a1")
+      (resp.synonyms) must contain ("AMPK-alpha1")
+      (resp.synonyms) must contain ("AMPK alpha-1")
     }
   }
 

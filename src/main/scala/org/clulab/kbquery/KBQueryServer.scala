@@ -11,7 +11,7 @@ import akka.stream.ActorMaterializer
 /**
   * App to query knowledge bases via Akka HTTP service.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Refactor configuration. Add class docs.
+  *   Last Modified: Update for rename of makeRoute method.
   */
 object KBQueryServer extends App with KBQService {
 
@@ -68,8 +68,8 @@ object KBQueryServer extends App with KBQService {
 
   override val logger = Logging(system, getClass)
 
-  val routes = makeRoutes(config)
-  val bindingFuture =  Http().bindAndHandle(handler = routes, interface = host, port = port)
+  val route = makeRoute(config)
+  val bindingFuture =  Http().bindAndHandle(handler = route, interface = host, port = port)
 
   logger.info(s"Server online at http://$host:$port")
 }

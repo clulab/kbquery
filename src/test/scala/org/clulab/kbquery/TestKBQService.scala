@@ -19,7 +19,7 @@ import org.clulab.kbquery.msg._
 /**
   * Unit tests of the KBQ service class.
   *   Written by: Tom Hicks. 3/26/2017.
-  *   Last Modified: Add corresponding POST tests.
+  *   Last Modified: Update for rename of makeRoute method.
   */
 class TestKBQService extends FlatSpec
     with MustMatchers
@@ -31,7 +31,7 @@ class TestKBQService extends FlatSpec
   override val logger = Logging(system, getClass)
 
   val config = ConfigFactory.load()
-  val route = makeRoutes(config)            // create the service route to test
+  val route = makeRoute(config)             // create the service route to test
 
   // override def beforeAll { }
   // override def afterAll { }

@@ -21,7 +21,7 @@ import akka.stream.Materializer
 /**
   * Trait to provide an Akka HTTP service using Json4s support for marshalling.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Add lookup by text string stub.
+  *   Last Modified: Add text synonyms lookup stub.
   */
 trait KBQService extends Json4sSupport {
 
@@ -63,6 +63,12 @@ trait KBQService extends Json4sSupport {
               parameters("ns", "id") { (ns, id) =>
                 logger.info(s"GET kblu/byNsAndId -> ${ns}, ${id}")
                 complete(KBLookup.lookupNsAndId(ns, id))
+              }
+            } ~
+            path("synonyms") {                      // synonym texts for NS/ID string
+              parameters("nsId") { nsId =>
+                logger.info(s"GET kblu/synonyms -> ${nsId}")
+                complete(KBLookup.synonyms(nsId))
               }
             }
           } ~

@@ -5,12 +5,15 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton class implementing knowledge base lookup and manipulation methods.
   *   Written by: Tom Hicks. 3/25/2017.
-  *   Last Modified: Add lookup by text string stub.
+  *   Last Modified: Add text synonyms lookup stub.
   */
 object KBLookup {
 
   /** Constant denoting an empty set of KB entries. */
   val NoEntries: List[KBEntry] = List.empty[KBEntry]
+
+  /** Constant denoting an empty set of strings. */
+  val NoTexts: List[String] = List.empty[String]
 
 
   /** Return the (possibly empty) set of KB entries for the given NS/ID string. */
@@ -71,5 +74,18 @@ object KBLookup {
  //      Returns resolutions for matching entries or None. */
  //  def lookupNoSpecies (text:String): Resolutions =
  //    newResolutions(search(text, Some((kbe:KBEntry) => kbe.hasNoSpecies)))
+
+  /** Return the (possibly empty) set of textual synonyms for the given NS/ID string. */
+  def synonyms (nsId: String): Synonyms = {
+    val parts = parseNamespaceId(nsId)      // divide NS and ID
+    if (parts.nonEmpty) {                   // if not empty there are 2 parts
+      val ns = parts(0)
+      val id = parts(1)
+      return Synonyms(List(                 // DUMMY DATA: IMPLEMENT LATER
+        "AMPKa1", "AMPK-a1", "AMPK-alpha1", "AMPK alpha-1"
+      ))
+    }
+    else Synonyms(NoTexts)                  // else empty result set
+  }
 
 }

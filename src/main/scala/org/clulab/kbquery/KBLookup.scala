@@ -5,7 +5,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton class implementing knowledge base lookup and manipulation methods.
   *   Written by: Tom Hicks. 3/25/2017.
-  *   Last Modified: Add another stub.
+  *   Last Modified: Rename to NsAndId.
   */
 object KBLookup {
 
@@ -29,11 +29,11 @@ object KBLookup {
   }
 
   /** Return the (possibly empty) set of KB entries for the given namespace and ID string. */
-  def lookupNamespaceId (namespace:String, id:String): KBEntries = {
+  def lookupNsAndId (ns:String, id:String): KBEntries = {
     return KBEntries(List(                // DUMMY DATA: IMPLEMENT LATER
-      KBEntry("textD", namespace, s"${id}-D", "Simple_chemical"),
-      KBEntry("textE", namespace, s"${id}-E", "Family"),
-      KBEntry("textF", namespace, s"${id}-F", "Protein")
+      KBEntry("textD", ns, s"${id}-D", "Simple_chemical"),
+      KBEntry("textE", ns, s"${id}-E", "Family"),
+      KBEntry("textF", ns, s"${id}-F", "Protein")
     ))
   }
 

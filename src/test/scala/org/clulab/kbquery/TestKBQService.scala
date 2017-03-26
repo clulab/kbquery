@@ -11,13 +11,15 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-// import MediaTypes._
-
-// import org.json4s.{ Formats, DefaultFormats, jackson, native }
 
 import org.clulab.kbquery._
 import org.clulab.kbquery.msg._
 
+/**
+  * Unit tests of the KBQ service class.
+  *   Written by: Tom Hicks. 3/26/2017.
+  *   Last Modified: Add test for lookup by text.
+  */
 class TestKBQService extends FlatSpec
     with MustMatchers
     with ScalatestRouteTest
@@ -41,10 +43,19 @@ class TestKBQService extends FlatSpec
     }
   }
 
-  //   Get(s"/tweets/$id") ~> route ~> check {
-  //     status must equal(StatusCodes.OK)
-  //     responseAs[TweetEntity] must equal(tweetEntity)
-  //   }
-  // }
+  it should "lookup by text" in {
+    Get("/kblu/byText?text=AKT1") ~> route ~> check {
+      status must equal(StatusCodes.OK)
+      val resp = responseAs[KBEntries]
+      (resp.entries) must not be (empty)
+      val entry = resp.entries(0)
+      (entry.text) must equal ("AKT1")
+      (entry.namespace) must equal ("uniprot")
+      (entry.id) must equal ("P31749")
+      (entry.label) must equal ("Gene_or_gene_product")
+      (entry.isGeneName) must be (false)
+      (entry.isShortName) must be (false)
+    }
+  }
 
 }

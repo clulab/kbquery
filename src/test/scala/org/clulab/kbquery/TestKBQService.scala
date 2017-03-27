@@ -83,11 +83,11 @@ class TestKBQService extends FlatSpec
       val resp = responseAs[KBEntries]
       (resp.entries) must not be (empty)
       (resp.entries.size) must be (3)
-      val entry = resp.entries(0)
-      (entry.text) must equal ("textD")
+      val entry = resp.entries(2)
+      (entry.text) must equal ("textC")
       (entry.namespace) must equal ("NEW_NS")
-      (entry.id) must equal ("QQQ-D")
-      (entry.label) must equal ("Simple_chemical")
+      (entry.id) must equal ("QQQ-C")
+      (entry.label) must equal ("Family")
       (entry.isGeneName) must be (false)
       (entry.isShortName) must be (false)
     }
@@ -153,11 +153,11 @@ class TestKBQService extends FlatSpec
       val resp = responseAs[KBEntries]
       (resp.entries) must not be (empty)
       (resp.entries.size) must be (3)
-      val entry = resp.entries(0)
-      (entry.text) must equal ("textD")
+      val entry = resp.entries(2)
+      (entry.text) must equal ("textC")
       (entry.namespace) must equal ("NEW_NS")
-      (entry.id) must equal ("QQQ-D")
-      (entry.label) must equal ("Simple_chemical")
+      (entry.id) must equal ("QQQ-C")
+      (entry.label) must equal ("Family")
       (entry.isGeneName) must be (false)
       (entry.isShortName) must be (false)
     }

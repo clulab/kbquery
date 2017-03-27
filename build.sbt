@@ -25,6 +25,7 @@ libraryDependencies ++= {
   val akkaV = "2.4.17"
   val akkaHTTPV = "10.0.5"
   val json4sV = "3.5.0"
+  val slickV = "3.2.0"
 
   Seq(
     "com.typesafe"                 %  "config"                             % "1.3.0",
@@ -36,6 +37,11 @@ libraryDependencies ++= {
     "com.typesafe.akka"           %%  "akka-actor"                         % akkaV,
     "com.typesafe.akka"           %%  "akka-stream"                        % akkaV,
     "com.typesafe.akka"           %%  "akka-slf4j"                         % akkaV,
+
+    // database
+    "org.hsqldb"                   %  "hsqldb"                             % "2.3.4",
+    "com.typesafe.slick"          %%  "slick"                              % slickV,
+    "com.typesafe.slick"          %%  "slick-hikaricp"                     % slickV,
 
     // akka-http
     "com.typesafe.akka"           %%  "akka-http-core"                     % akkaHTTPV,

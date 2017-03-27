@@ -1,11 +1,12 @@
 package org.clulab.kbquery
 
 import org.clulab.kbquery.msg._
+import org.clulab.kbquery.DBManager._
 
 /**
   * Singleton class implementing knowledge base lookup and manipulation methods.
   *   Written by: Tom Hicks. 3/25/2017.
-  *   Last Modified: Add text synonyms lookup stub.
+  *   Last Modified: Redo all methods to forwards calls to DB manager object.
   */
 object KBLookup {
 
@@ -22,22 +23,14 @@ object KBLookup {
     if (parts.nonEmpty) {                   // if not empty there are 2 parts
       val ns = parts(0)
       val id = parts(1)
-      return KBEntries(List(                // DUMMY DATA: IMPLEMENT LATER
-        KBEntry("textA", ns, s"${id}-A", "Gene_or_gene_product"),
-        KBEntry("textB", ns, s"${id}-B", "Gene_or_gene_product"),
-        KBEntry("textC", ns, s"${id}-C", "Family")
-      ))
+      return DBManager.byNsAndId(ns, id)
     }
     else KBEntries(NoEntries)               // else empty result set
   }
 
   /** Return the (possibly empty) set of KB entries for the given namespace and ID string. */
   def lookupNsAndId (ns:String, id:String): KBEntries = {
-    return KBEntries(List(                // DUMMY DATA: IMPLEMENT LATER
-      KBEntry("textD", ns, s"${id}-D", "Simple_chemical"),
-      KBEntry("textE", ns, s"${id}-E", "Family"),
-      KBEntry("textF", ns, s"${id}-F", "Gene_or_gene_product")
-    ))
+    return DBManager.byNsAndId(ns, id)
   }
 
  //  /** Try lookups for all given NS/IDs until one succeeds or all fail. */
@@ -50,9 +43,7 @@ object KBLookup {
 
   /** Return the (possibly empty) set of all KB entries for the given text string. */
   def lookup (text: String): KBEntries = {
-    return KBEntries(List(                // DUMMY DATA: IMPLEMENT LATER
-      KBEntry("AKT1", "uniprot", "P31749", "Gene_or_gene_product")
-    ))
+    return DBManager.byText(text)
   }
 
  //  /** Find the set of KB entries, for the given text string, which match the given
@@ -81,9 +72,7 @@ object KBLookup {
     if (parts.nonEmpty) {                   // if not empty there are 2 parts
       val ns = parts(0)
       val id = parts(1)
-      return Synonyms(List(                 // DUMMY DATA: IMPLEMENT LATER
-        "AMPKa1", "AMPK-a1", "AMPK-alpha1", "AMPK alpha-1"
-      ))
+      return DBManager.synonyms(ns, id)
     }
     else Synonyms(NoTexts)                  // else empty result set
   }

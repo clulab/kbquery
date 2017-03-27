@@ -11,7 +11,7 @@ import akka.stream.ActorMaterializer
 /**
   * App to query knowledge bases via Akka HTTP service.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Update for rename of makeRoute method.
+  *   Last Modified: Make some vals private. Remove init resources method.
   */
 object KBQueryServer extends App with KBQService {
 
@@ -33,11 +33,6 @@ object KBQueryServer extends App with KBQService {
     }
   }
 
-  def initializeResources: Unit = {
-    // val _ = do long initialization here at startup
-  }
-
-
   // read default configuration from config file
   private val defaultConfig = ConfigFactory.load()
   private val defaultPort = defaultConfig.getString("akka.http.server.port")
@@ -49,24 +44,23 @@ object KBQueryServer extends App with KBQService {
     "host" -> defaultHostName
   )
 
-  val argMap = buildArgMap(defaults, args.toList)
+  private val argMap = buildArgMap(defaults, args.toList)
 
-  val port: Int = argMap("port").toInt
-  val host: String = argMap("host")
+  private val port: Int = argMap("port").toInt
+  private val host: String = argMap("host")
 
   // create final config from loaded configuration updated with decoded command line values
   val config = defaultConfig
     .withValue(defaultHostName, ConfigValueFactory.fromAnyRef(host))
     .withValue(defaultPort, ConfigValueFactory.fromAnyRef(port))
 
-  // initialize any resources the program needs
-  initializeResources
-
   override implicit val system: ActorSystem = ActorSystem("akka", config)
   override implicit val executionContext = system.dispatcher
   override implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   override val logger = Logging(system, getClass)
+
+  // initialize any resources the program needs here
 
   val route = makeRoute(config)
   val bindingFuture =  Http().bindAndHandle(handler = route, interface = host, port = port)

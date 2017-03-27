@@ -26,7 +26,13 @@ case class KBEntry (
   val isShortName: Boolean = false,
 
   /** The species associated with this entry, if any. Empty string represents no species. */
-  val species: String = NoSpeciesValue
+  val species: String = NoSpeciesValue,
+
+  /** The search priority level: 0 = normal, higher numbers = higher priority. */
+  val priority: Int = DefaultPriority,
+
+  /** A field which indicates the source of the entry within the KB. */
+  val sourceIndex: Int = UnknownSource
 
 ) extends Message
 

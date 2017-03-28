@@ -7,18 +7,17 @@ import com.typesafe.config._
 import slick.jdbc.HsqldbProfile.api._
 
 import org.clulab.kbquery.msg._
+import org.clulab.kbquery.Entries._
+import org.clulab.kbquery.Sources._
 
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add dummy DB creation/initialization test method.
+  *   Last Modified: Add and use companion table objects for table schemas.
   */
 object DBManager {
 
   val theDB = Database.forConfig("db.kbqdb")
-
-  val sources: TableQuery[Sources] = TableQuery[Sources]
-  val entries: TableQuery[Entries] = TableQuery[Entries]
 
   /** Close down the database and cleanup before an exit. */
   def close: Unit = theDB.close
@@ -51,17 +50,17 @@ object DBManager {
     val setup = DBIO.seq (
 
       // create the tables from the DDL
-      (sources.schema ++ entries.schema).create,
+      (Sources.schema ++ Entries.schema).create,
 
       // create/insert some dummy data:
-      sources ++= Seq (
+      Sources ++= Seq (
         (0, "UNK", ""),
         (1, "Uniprot", "uniprot-proteins.tsv.gz"),
         (2, "PFAM", "PFAM-families.tsv.gz"),
         (3, "PubChem", "PubChem.tsv.gz")
       ),
 
-      entries ++= Seq (
+      Entries ++= Seq (
         ("AKT1", "uniprot", "P31749", "Gene_or_gene_product", true, false, "Human", 0, 1),
         ("AKT1", "uniprot", "P31749", "Gene_or_gene_product", true, false, "Homo sapiens", 0, 1),
         ("PKB", "uniprot", "P31749", "Gene_or_gene_product", true, true, "Human", 0, 1),

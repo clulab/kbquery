@@ -26,6 +26,9 @@ class Entries (tag: Tag)
     foreignKey("SRC_FK", sourceIndex, TableQuery[Sources])(_.srcId)
 }
 
+/** Companion object which represents the actual database table. */
+object Entries extends TableQuery(new Entries(_)) { }
+
 
 /** A table holding meta information about the source of the KBs. */
 class Sources (tag: Tag) extends Table[(Int, String, String)] (tag, "SRCS")
@@ -37,3 +40,6 @@ class Sources (tag: Tag) extends Table[(Int, String, String)] (tag, "SRCS")
   // every table needs a * projection with the same type as the table's type parameter
   def * : ProvenShape[(Int, String, String)] = (srcId, srcName, srcFilename)
 }
+
+/** Companion object which represents the actual database table. */
+object Sources extends TableQuery(new Sources(_)) { }

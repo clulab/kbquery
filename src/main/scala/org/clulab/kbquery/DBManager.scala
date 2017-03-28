@@ -1,6 +1,7 @@
 package org.clulab.kbquery
 
 import scala.concurrent.{Future, Await}
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.typesafe.config._
 
@@ -13,7 +14,7 @@ import org.clulab.kbquery.Sources._
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add and use companion table objects for table schemas.
+  *   Last Modified: Add and echo test data using futures.
   */
 object DBManager {
 
@@ -47,8 +48,7 @@ object DBManager {
 
 
   def dummyInit: Unit = {
-    val setup = DBIO.seq (
-
+    val setup: DBIO[Unit] = DBIO.seq (
       // create the tables from the DDL
       (Sources.schema ++ Entries.schema).create,
 
@@ -69,13 +69,18 @@ object DBManager {
         ("PKB alpha", "uniprot", "P31749", "Gene_or_gene_product", false, true, "Homo sapiens", 0, 1),
         ("RAC", "uniprot", "P31749", "Gene_or_gene_product", true, false, "Human", 0, 1),
         ("RAC", "uniprot", "P31749", "Gene_or_gene_product", true, false, "Homo sapiens", 0, 1),
-        ("RAC-PK-alpha", "uniprot", "P31749", "Gene_or_gene_product", false, true, "Human", 0, 1),
-        ("RAC-PK-alpha", "uniprot", "P31749", "Gene_or_gene_product", false, true, "Homo sapiens", 0, 1)
+        ("RAC-PK-alpha", "uniprot", "P31749", "Gene_or_gene_product", false, true, "Homo sapiens", 0, 1),
+        ("RAC-PK-alpha", "uniprot", "P31749", "Gene_or_gene_product", false, true, "Human", 0, 1)
       )
+    )
 
-    )  // setup
+    val setupFuture: Future[Unit] = theDB.run(setup)
+    Await.result(setupFuture, Duration.Inf)
 
-    val setupFuture = theDB.run(setup)
+    val action = DBIO.seq {
+      Entries.result.map(ent => println(s"ENTITY=${ent}"))
+    }
+    Await.result(theDB.run(action), Duration.Inf)
   }
 
   // Now create and initialize the DB as a test

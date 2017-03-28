@@ -20,7 +20,7 @@ import akka.stream.Materializer
 /**
   * Trait to provide an Akka HTTP service using Json4s support for marshalling.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Rename makeRoute method.
+  *   Last Modified: Minor cleanup: remove unused code.
   */
 trait KBQService extends Json4sSupport {
 
@@ -36,9 +36,7 @@ trait KBQService extends Json4sSupport {
   def in [U] (duration: FiniteDuration)(body: => U): Unit =
     system.scheduler.scheduleOnce(duration)(body)
 
-  // def apiRequest(request: HttpRequest): Future[HttpResponse] =
-  //   Source.single(request).via(apiConnectionFlow).runWith(Sink.head)
-
+  /** Create and return the route for this app, using the given configuration, if needed. */
   def makeRoute (config: Config): Route = {
     val appVersion = config.getString("app.version")
 

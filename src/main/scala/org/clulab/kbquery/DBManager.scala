@@ -14,7 +14,7 @@ import org.clulab.kbquery.Sources._
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add and echo test data using futures.
+  *   Last Modified: Add entry and source dump methods. Factor out test data loading.
   */
 object DBManager {
 
@@ -46,43 +46,18 @@ object DBManager {
     ))
   }
 
-
-  def dummyInit: Unit = {
-    val setup: DBIO[Unit] = DBIO.seq (
-      // create the tables from the DDL
-      (Sources.schema ++ Entries.schema).create,
-
-      // create/insert some dummy data:
-      Sources ++= Seq (
-        (0, "UNK", ""),
-        (1, "Uniprot", "uniprot-proteins.tsv.gz"),
-        (2, "PFAM", "PFAM-families.tsv.gz"),
-        (3, "PubChem", "PubChem.tsv.gz")
-      ),
-
-      Entries ++= Seq (
-        ("AKT1", "uniprot", "P31749", "Gene_or_gene_product", true, false, "Human", 0, 1),
-        ("AKT1", "uniprot", "P31749", "Gene_or_gene_product", true, false, "Homo sapiens", 0, 1),
-        ("PKB", "uniprot", "P31749", "Gene_or_gene_product", true, true, "Human", 0, 1),
-        ("PKB", "uniprot", "P31749", "Gene_or_gene_product", true, true, "Homo sapiens", 0, 1),
-        ("PKB alpha", "uniprot", "P31749", "Gene_or_gene_product", false, true, "Human", 0, 1),
-        ("PKB alpha", "uniprot", "P31749", "Gene_or_gene_product", false, true, "Homo sapiens", 0, 1),
-        ("RAC", "uniprot", "P31749", "Gene_or_gene_product", true, false, "Human", 0, 1),
-        ("RAC", "uniprot", "P31749", "Gene_or_gene_product", true, false, "Homo sapiens", 0, 1),
-        ("RAC-PK-alpha", "uniprot", "P31749", "Gene_or_gene_product", false, true, "Homo sapiens", 0, 1),
-        ("RAC-PK-alpha", "uniprot", "P31749", "Gene_or_gene_product", false, true, "Human", 0, 1)
-      )
-    )
-
-    val setupFuture: Future[Unit] = theDB.run(setup)
-    Await.result(setupFuture, Duration.Inf)
-
-    val action = DBIO.seq {
-      Entries.result.map(ent => println(s"ENTITY=${ent}"))
-    }
-    Await.result(theDB.run(action), Duration.Inf)
+  /** Return all bioentity entries from the KB. */
+  def dumpEntries: KBEntries = {
+    val data = theDB.run(Entries.result.map(_.map(row => Entries.toKBEntry(row)).toList))
+    val kbeList = Await.result(data, Duration.Inf)
+    return KBEntries(kbeList)
   }
 
-  // Now create and initialize the DB as a test
-  dummyInit
+  /** Return all source information entries from the KB. */
+  def dumpSources: KBSources = {
+    val data = theDB.run(Sources.result.map(_.map(row => Sources.toKBSource(row)).toList))
+    val srcList = Await.result(data, Duration.Inf)
+    return KBSources(srcList)
+  }
+
 }

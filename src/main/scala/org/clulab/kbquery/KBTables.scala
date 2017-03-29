@@ -3,6 +3,8 @@ package org.clulab.kbquery
 import slick.jdbc.HsqldbProfile.api._
 import slick.lifted.{ProvenShape, ForeignKeyQuery}
 
+import org.clulab.kbquery.msg._
+
 /** A table holding all the KB entries. */
 class Entries (tag: Tag)
   extends Table[(String, String, String, String, Boolean, Boolean, String, Int, Int)](tag, "KBE")
@@ -27,7 +29,14 @@ class Entries (tag: Tag)
 }
 
 /** Companion object which represents the actual database table. */
-object Entries extends TableQuery(new Entries(_)) { }
+object Entries extends TableQuery(new Entries(_)) {
+
+  /** Convert a 9-tuple of the correct shape into a KBEntry. */
+  def toKBEntry (row: Tuple9[String, String, String, String, Boolean, Boolean, String, Int, Int]): KBEntry = {
+      KBEntry(row._1, row._2, row._3, row._4, row._5, row._6, row._7, row._8, row._9)
+  }
+
+}
 
 
 /** A table holding meta information about the source of the KBs. */
@@ -42,4 +51,9 @@ class Sources (tag: Tag) extends Table[(Int, String, String)] (tag, "SRCS")
 }
 
 /** Companion object which represents the actual database table. */
-object Sources extends TableQuery(new Sources(_)) { }
+object Sources extends TableQuery(new Sources(_)) {
+
+  /** Convert a 3-tuple of the correct shape into a KBSource. */
+  def toKBSource (row: Tuple3[Int, String, String]): KBSource = KBSource(row._1, row._2, row._3)
+
+}

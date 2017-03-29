@@ -41,3 +41,24 @@ case class KBEntry (
 case class KBEntries (
   val entries: List[KBEntry]                // convey the set as a List for convenience
 ) extends Message
+
+
+/**
+  * A class representing source information for a single KB.
+  */
+case class KBSource (
+
+  /** A field which indicates the source of the entry within the KB. */
+  val srcId: Int = UnknownSource,
+
+  /** A name to uniquely identify the source KB. */
+  val srcName: String,
+
+  /** The filename from which the KB was loaded. */
+  val srcFilename: String
+)
+
+/** A list of all source information records. */
+case class KBSources (
+  val sources: List[KBSource]
+) extends Message

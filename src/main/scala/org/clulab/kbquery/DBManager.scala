@@ -8,27 +8,32 @@ import com.typesafe.config._
 import slick.jdbc.HsqldbProfile.api._
 
 import org.clulab.kbquery.msg._
-import org.clulab.kbquery.dao.{Entries, Sources}
+import org.clulab.kbquery.dao._
 
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Update for new dao package.
+  *   Last Modified: Add/use general query run method. Implement byNsAndId.
   */
 object DBManager {
 
+  /** The Slick database manipulated by this manager class. */
   val theDB = Database.forConfig("db.kbqdb")
 
   /** Close down the database and cleanup before an exit. */
   def close: Unit = theDB.close
 
+  /** Run the given query and return matching KB entries. */
+  def queryToKBEntries (query: Query[Entries, EntryType, Seq]): KBEntries = {
+    val data = theDB.run(query.result.map(rows => Entries.toKBEntries(rows)))
+    return Await.result(data, Duration.Inf)
+  }
+
+
   /** Return the (possibly empty) set of KB entries for the given namespace and ID string. */
   def byNsAndId (ns:String, id:String): KBEntries = {
-    return KBEntries(List(                // DUMMY DATA: IMPLEMENT LATER
-      KBEntry("textA", ns, s"${id}-A", "Gene_or_gene_product"),
-      KBEntry("textB", ns, s"${id}-B", "Gene_or_gene_product"),
-      KBEntry("textC", ns, s"${id}-C", "Family")
-    ))
+    val query = Entries.findByNsAndId(ns, id)
+    queryToKBEntries(query)
   }
 
   /** Return the (possibly empty) set of all KB entries for the given text string. */
@@ -47,16 +52,14 @@ object DBManager {
 
   /** Return all bioentity entries from the KB. */
   def dumpEntries: KBEntries = {
-    val data = theDB.run(Entries.result.map(_.map(row => Entries.toKBEntry(row)).toList))
-    val kbeList = Await.result(data, Duration.Inf)
-    return KBEntries(kbeList)
+    val data = theDB.run(Entries.result.map(rows => Entries.toKBEntries(rows)))
+    return Await.result(data, Duration.Inf)
   }
 
   /** Return all source information entries from the KB. */
   def dumpSources: KBSources = {
-    val data = theDB.run(Sources.result.map(_.map(row => Sources.toKBSource(row)).toList))
-    val srcList = Await.result(data, Duration.Inf)
-    return KBSources(srcList)
+    val data = theDB.run(Sources.result.map(rows => Sources.toKBSources(rows)))
+    return Await.result(data, Duration.Inf)
   }
 
 }

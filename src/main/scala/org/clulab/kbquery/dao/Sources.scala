@@ -8,7 +8,7 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB source table; holding meta info on the source of the KBs.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Refactor into dao package.
+  *   Last Modified: Add method to convert table rows into KBSources object.
   */
 class Sources (tag: Tag) extends Table[SourceType] (tag, "SRCS") {
 
@@ -30,5 +30,10 @@ object Sources extends TableQuery(new Sources(_)) {
 
   /** Convert a source table row of the correct shape into a KBSource. */
   def toKBSource (row: SourceType): KBSource = KBSource(row._1, row._2, row._3)
+
+  /** Convert a sequence of table rows into a KBSources object. */
+  def toKBSources (rows: Seq[SourceType]): KBSources = {
+    KBSources(rows.map(row => toKBSource(row)).toList)
+  }
 
 }

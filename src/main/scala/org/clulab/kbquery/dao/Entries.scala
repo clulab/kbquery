@@ -8,7 +8,7 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB entries table.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Refactor into dao package.
+  *   Last Modified: Add method to convert table rows into KBEntries object.
   */
 class Entries (tag: Tag) extends Table[EntryType](tag, "KBE") {
 
@@ -47,6 +47,11 @@ object Entries extends TableQuery(new Entries(_)) {
   /** Convert an entries table row of the correct shape into a KBEntry. */
   def toKBEntry (row: EntryType): KBEntry = {
     KBEntry(row._1, row._2, row._3, row._4, row._5, row._6, row._7, row._8, row._9)
+  }
+
+  /** Convert a sequence of table rows into a KBEntries object. */
+  def toKBEntries (rows: Seq[EntryType]): KBEntries = {
+    KBEntries(rows.map(row => toKBEntry(row)).toList)
   }
 
 }

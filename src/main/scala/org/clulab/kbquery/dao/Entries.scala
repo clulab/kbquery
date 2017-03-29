@@ -8,7 +8,7 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB entries table.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add methods to find by text & synonyms. Add converter to synonyms list.
+  *   Last Modified: Add method to find by text set.
   */
 class Entries (tag: Tag) extends Table[EntryType](tag, "KBE") {
 
@@ -44,9 +44,14 @@ object Entries extends TableQuery(new Entries(_)) {
     Entries.filter(kbe => (kbe.namespace === ns) && (kbe.id === id))
   }
 
-  /** Query to find records by text string. */
+  /** Query to find records exactly matching the given text string. */
   def findByText (text:String): Query[Entries, EntryType, Seq] = {
     Entries.filter(kbe => kbe.text === text)
+  }
+
+  /** Query to find records with text in the given set of text strings. */
+  def findByTextSet (textSet: Set[String]): Query[Entries, EntryType, Seq] = {
+    Entries.filter(kbe => kbe.text inSet textSet)
   }
 
   /** Query to find text field synonyms by namespace and ID strings. */

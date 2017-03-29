@@ -20,7 +20,7 @@ import akka.stream.Materializer
 /**
   * Trait to provide an Akka HTTP service using Json4s support for marshalling.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Add entry and source dump methods.
+  *   Last Modified: Make byText exact, make lookup lookup by transformed keys.
   */
 trait KBQService extends Json4sSupport {
 
@@ -44,10 +44,16 @@ trait KBQService extends Json4sSupport {
       logRequestResult("kbquery-microservice") {    // wrap contained paths in logger
         get {                               // GETS
           pathPrefix("kblu") {
-            path("byText") {                        // by text string
+            path("lookup") {                        // by transformed text string(s)
+              parameters("text") { text =>
+                logger.info(s"GET kblu/lookup -> ${text}")
+                complete(KBLookup.lookup(text))
+              }
+            } ~
+            path("byText") {                        // by exact matching of text string
               parameters("text") { text =>
                 logger.info(s"GET kblu/byText -> ${text}")
-                complete(KBLookup.lookup(text))
+                complete(KBLookup.lookupText(text))
               }
             } ~
             path("byNsId") {                        // by NS/ID string
@@ -86,10 +92,16 @@ trait KBQService extends Json4sSupport {
         } ~
         post {                              // POSTS
           pathPrefix("kblu") {
-            path("byText") {                        // by text string
+            path("lookup") {                        // by transformed text string(s)
+              entity(as[msg.TextMessage]) { msg =>
+                logger.info(s"POST kblu/lookup -> ${msg}")
+                complete(KBLookup.lookup(msg.text))
+              }
+            } ~
+            path("byText") {                        // by exact matching of text string
               entity(as[msg.TextMessage]) { msg =>
                 logger.info(s"POST kblu/byText -> ${msg}")
-                complete(KBLookup.lookup(msg.text))
+                complete(KBLookup.lookupText(msg.text))
               }
             } ~
             path("byNsId") {                        // by NS/ID string

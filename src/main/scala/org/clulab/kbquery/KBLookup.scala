@@ -2,11 +2,12 @@ package org.clulab.kbquery
 
 import org.clulab.kbquery.msg._
 import org.clulab.kbquery.DBManager._
+import org.clulab.kbquery.KBKeyTransforms._
 
 /**
   * Singleton class implementing knowledge base lookup and manipulation methods.
   *   Written by: Tom Hicks. 3/25/2017.
-  *   Last Modified: Redo all methods to forwards calls to DB manager object.
+  *   Last Modified: Add exact lookupText, make lookup lookup by transformed keys.
   */
 object KBLookup {
 
@@ -40,9 +41,18 @@ object KBLookup {
  //  def speciesForNsId (nsId:String): SpeciesNameSet =
  //    nsidMap.getOrElse(nsId.trim, NoEntries).map(_.species).filter(_ != NoSpeciesValue).toSet
 
-
-  /** Return the (possibly empty) set of all KB entries for the given text string. */
+  /** Return the (possibly empty) set of all KB entries with a text key string
+      that loosely matches the given text string. */
   def lookup (text: String): KBEntries = {
+    val textSet = applyAllTransforms(DefaultKeyTransforms, text).toSet
+    if (textSet.nonEmpty)
+      DBManager.byTextSet(textSet)
+    else
+      KBEntries(NoEntries)                  // else empty result set
+  }
+
+  /** Return the (possibly empty) set of all KB entries exactly matching the given text string. */
+  def lookupText (text: String): KBEntries = {
     return DBManager.byText(text)
   }
 

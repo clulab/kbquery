@@ -13,7 +13,7 @@ import org.clulab.kbquery.dao._
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Simplify byNsAndId. Implement byText & synonyms.
+  *   Last Modified: Add byTextSet. byText is now exact.
   */
 object DBManager {
 
@@ -34,9 +34,14 @@ object DBManager {
     queryToKBEntries(Entries.findByNsAndId(ns, id))
   }
 
-  /** Return the (possibly empty) set of all KB entries for the given text string. */
+  /** Return the (possibly empty) set of all KB entries exactly matching the given text string. */
   def byText (text:String): KBEntries = {
     queryToKBEntries(Entries.findByText(text))
+  }
+
+  /** Return the (possibly empty) set of all KB entries for the given text string. */
+  def byTextSet (textSet: Set[String]): KBEntries = {
+    queryToKBEntries(Entries.findByTextSet(textSet))
   }
 
   /** Return the (possibly empty) set of textual synonyms for the given NS/ID string. */

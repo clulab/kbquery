@@ -13,7 +13,7 @@ import org.clulab.kbquery.dao._
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add/use general query run method. Implement byNsAndId.
+  *   Last Modified: Simplify byNsAndId. Implement byText & synonyms.
   */
 object DBManager {
 
@@ -29,25 +29,21 @@ object DBManager {
     return Await.result(data, Duration.Inf)
   }
 
-
   /** Return the (possibly empty) set of KB entries for the given namespace and ID string. */
   def byNsAndId (ns:String, id:String): KBEntries = {
-    val query = Entries.findByNsAndId(ns, id)
-    queryToKBEntries(query)
+    queryToKBEntries(Entries.findByNsAndId(ns, id))
   }
 
   /** Return the (possibly empty) set of all KB entries for the given text string. */
   def byText (text:String): KBEntries = {
-    return KBEntries(List(                // DUMMY DATA: IMPLEMENT LATER
-      KBEntry("AKT1", "uniprot", "P31749", "Gene_or_gene_product")
-    ))
+    queryToKBEntries(Entries.findByText(text))
   }
 
   /** Return the (possibly empty) set of textual synonyms for the given NS/ID string. */
   def synonyms (ns:String, id:String): Synonyms = {
-    return Synonyms(List(                 // DUMMY DATA: IMPLEMENT LATER
-      "AMPKa1", "AMPK-a1", "AMPK-alpha1", "AMPK alpha-1"
-    ))
+    val query = Entries.findSynonyms(ns, id)
+    val data = theDB.run(query.result.map(rows => Entries.toSynonyms(rows)))
+    return Await.result(data, Duration.Inf)
   }
 
   /** Return all bioentity entries from the KB. */

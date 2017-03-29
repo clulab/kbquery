@@ -8,7 +8,7 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB entries table.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add method to convert table rows into KBEntries object.
+  *   Last Modified: Add methods to find by text & synonyms. Add converter to synonyms list.
   */
 class Entries (tag: Tag) extends Table[EntryType](tag, "KBE") {
 
@@ -44,6 +44,17 @@ object Entries extends TableQuery(new Entries(_)) {
     Entries.filter(kbe => (kbe.namespace === ns) && (kbe.id === id))
   }
 
+  /** Query to find records by text string. */
+  def findByText (text:String): Query[Entries, EntryType, Seq] = {
+    Entries.filter(kbe => kbe.text === text)
+  }
+
+  /** Query to find text field synonyms by namespace and ID strings. */
+  def findSynonyms (ns:String, id:String): Query[Rep[String], String, Seq] = {
+    Entries.filter(kbe => (kbe.namespace === ns) && (kbe.id === id)).map(_.text)
+  }
+
+
   /** Convert an entries table row of the correct shape into a KBEntry. */
   def toKBEntry (row: EntryType): KBEntry = {
     KBEntry(row._1, row._2, row._3, row._4, row._5, row._6, row._7, row._8, row._9)
@@ -53,5 +64,8 @@ object Entries extends TableQuery(new Entries(_)) {
   def toKBEntries (rows: Seq[EntryType]): KBEntries = {
     KBEntries(rows.map(row => toKBEntry(row)).toList)
   }
+
+  /** Convert a sequence of synonym strings into a Synonyms object. */
+  def toSynonyms (syns: Seq[String]): Synonyms = Synonyms(syns.toSet.toList)
 
 }

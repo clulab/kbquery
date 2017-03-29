@@ -7,13 +7,12 @@ import com.typesafe.config._
 
 import slick.jdbc.HsqldbProfile.api._
 
-import org.clulab.kbquery.Entries._
-import org.clulab.kbquery.Sources._
+import org.clulab.kbquery.dao.{Entries, Sources}
 
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Issue proper shutdown and cleanup.
+  *   Last Modified: Update for new dao package.
   */
 object KBLoader extends App {
 

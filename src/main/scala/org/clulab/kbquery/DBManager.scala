@@ -8,13 +8,12 @@ import com.typesafe.config._
 import slick.jdbc.HsqldbProfile.api._
 
 import org.clulab.kbquery.msg._
-import org.clulab.kbquery.Entries._
-import org.clulab.kbquery.Sources._
+import org.clulab.kbquery.dao.{Entries, Sources}
 
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add entry and source dump methods. Factor out test data loading.
+  *   Last Modified: Update for new dao package.
   */
 object DBManager {
 

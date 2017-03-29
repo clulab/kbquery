@@ -13,13 +13,15 @@ import org.clulab.kbquery.Sources._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Initial working version.
+  *   Last Modified: Issue proper shutdown and cleanup.
   */
 object KBLoader extends App {
 
+  /** The Database: configure and open it. */
+  val theDB = Database.forConfig("db.kbqdb")
+
   /** Create and load the DB with some test data. */
   def loadTestData: Unit = {
-    val theDB = Database.forConfig("db.kbqdb")
 
     val setup: DBIO[Unit] = DBIO.seq (
       // create the tables from the DDL
@@ -124,13 +126,14 @@ object KBLoader extends App {
         ("COX7a", "pfam", "PF02238", "Family", false, false, "", 0, 2),
         ("COX8",  "pfam", "PF02285", "Family", false, false, "", 0, 2)
       )
+
     )  // setup
 
-    // run setup to create and fill the DB:
-    try {
-      Await.result(theDB.run(setup), Duration.Inf)
-    } finally theDB.close
-
+    // run setup to create and fill the DB, then shutdown and close DB
+    val shutdown: DBIO[Int] = sqlu"""shutdown"""
+    val setupAndShutdown = setup.andThen(shutdown)
+    Await.result(theDB.run(setupAndShutdown), Duration.Inf)
+    theDB.close
   }
 
   // now actually load the DB:

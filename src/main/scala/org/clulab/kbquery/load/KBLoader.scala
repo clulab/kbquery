@@ -1,4 +1,4 @@
-package org.clulab.kbquery
+package org.clulab.kbquery.load
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{Future, Await}
@@ -14,12 +14,9 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Stub out file loading in batches. Replace load plan.
+  *   Last Modified: Move to child package, add package object.
   */
 object KBLoader extends App {
-
-  // read configuration from config file
-  private val config = ConfigFactory.load()
 
   /** The Database: configure and open it. */
   val theDB = Database.forConfig("db.kbqdb")

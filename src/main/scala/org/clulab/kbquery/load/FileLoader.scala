@@ -1,4 +1,4 @@
-package org.clulab.kbquery
+package org.clulab.kbquery.load
 
 import java.io._
 import java.util.zip.GZIPInputStream
@@ -13,14 +13,9 @@ import org.clulab.kbquery.msg._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Initial port from Reach.
+  *   Last Modified: Move to child package, add package object.
   */
 object FileLoader {
-
-  // read configuration from config file
-  private val config = ConfigFactory.load()
-  private val kbPath = config.getString("db.sources.kbPath")
-  private val batchSize = config.getInt("db.sources.batchSize")
 
   /** File Path to the directory which holds the entity knowledge bases. */
   val KBDirFilePath = "src/main/resources/org/clulab/reach/kb"

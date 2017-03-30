@@ -13,7 +13,7 @@ import org.clulab.kbquery.dao._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Begin rewrite to load real data.
+  *   Last Modified: Continue rewrite with load plan. Still using fake entries data.
   */
 object KBLoader extends App {
 
@@ -49,15 +49,6 @@ object KBLoader extends App {
   /** Load the entries table. */
   def loadEntries: DBIO[Unit] = {
     DBIO.seq (
-
-      // create/insert some dummy data:
-      Sources ++= Seq (
-        (0, "UNK", "", ""),
-        (1, "Uniprot", "uniprot-proteins.tsv.gz", "Gene_or_gene_product"),
-        (2, "PFAM", "PFAM-families.tsv.gz", "Family"),
-        (3, "PubChem", "PubChem.tsv.gz", "Simple_chemical"),
-        (4, "NER", "NER-Grounding-Override.tsv.gz", "")
-      ),
 
       Entries ++= Seq (                   // Proteins from NER
         ("AKT1", "uniprot", "P31749", "Gene_or_gene_product", true, false, "Human", 1, 4),
@@ -157,13 +148,13 @@ object KBLoader extends App {
 
 
   // MAIN:
-  Await.result(theDB.run(createTables), Duration.Inf)
-  Await.result(theDB.run(loadSources), Duration.Inf)
-  Await.result(theDB.run(loadEntries), Duration.Inf)
-  Await.result(theDB.run(shutdown), Duration.Inf)
+  //
+  val loadDB = createTables                 // the loading execution plan
+    .andThen(loadSources)
+    .andThen(loadEntries)
+    .andThen(shutdown)
 
-  // run setup to create and fill the DB, then shutdown and close DB
-  // val setupAndShutdown = setup.andThen(shutdown)
-  // Await.result(theDB.run(setupAndShutdown), Duration.Inf)
-  theDB.close
+  Await.result(theDB.run(loadDB), Duration.Inf) // execute the loading plan
+
+  theDB.close                                   // close down DB and exit
 }

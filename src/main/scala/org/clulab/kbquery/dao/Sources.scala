@@ -8,18 +8,18 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB source table; holding meta info on the source of the KBs.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add source label field.
+  *   Last Modified: Rename source fields.
   */
 class Sources (tag: Tag) extends Table[SourceType] (tag, "SRCS") {
 
   // NB: Any field changes, additions, or deletions must also be updated in the package types!
-  def srcId: Rep[Int]          = column[Int]("src_id", O.PrimaryKey)
-  def srcName: Rep[String]     = column[String]("src_name")
-  def srcFilename: Rep[String] = column[String]("src_filename")
-  def srcLabel: Rep[String]    = column[String]("src_label")
+  def id: Rep[Int]          = column[Int]("id", O.PrimaryKey)
+  def name: Rep[String]     = column[String]("name")
+  def filename: Rep[String] = column[String]("filename")
+  def label: Rep[String]    = column[String]("label")
 
   // every table needs a * projection with the same type as the table's type parameter
-  def * : ProvenShape[SourceType] = (srcId, srcName, srcFilename, srcLabel)
+  def * : ProvenShape[SourceType] = (id, name, filename, label)
 
 }
 

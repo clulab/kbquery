@@ -14,7 +14,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Move to child package, add package object.
+  *   Last Modified: Rename source fields.
   */
 object KBLoader extends App {
 
@@ -26,11 +26,11 @@ object KBLoader extends App {
     val srcMetaInfo = config.getList("db.sources.metaInfo")
     srcMetaInfo.iterator().asScala.map { srcLine =>
       val src = srcLine.asInstanceOf[ConfigObject].toConfig
-      val srcId = src.getInt("id")
-      val srcName = src.getString("name")
-      val srcFilename = src.getString("filename")
-      val srcLabel = src.getString("label")
-      (srcId, srcName, srcFilename, srcLabel)
+      val id = src.getInt("id")
+      val name = src.getString("name")
+      val filename = src.getString("filename")
+      val label = src.getString("label")
+      (id, name, filename, label)
     }.toList
   }
 

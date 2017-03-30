@@ -8,7 +8,7 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB entries table.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add method to find by text set.
+  *   Last Modified: Rename source fields.
   */
 class Entries (tag: Tag) extends Table[EntryType](tag, "KBE") {
 
@@ -29,7 +29,7 @@ class Entries (tag: Tag) extends Table[EntryType](tag, "KBE") {
 
   // a reified foreign key relation that can be navigated to create a join
   def source: ForeignKeyQuery[Sources, SourceType] =
-    foreignKey("SRC_FK", sourceIndex, TableQuery[Sources])(_.srcId)
+    foreignKey("SRC_FK", sourceIndex, TableQuery[Sources])(_.id)
 
 }
 

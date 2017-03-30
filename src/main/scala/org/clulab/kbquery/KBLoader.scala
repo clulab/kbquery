@@ -1,5 +1,6 @@
 package org.clulab.kbquery
 
+import scala.collection.JavaConverters._
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -7,32 +8,55 @@ import com.typesafe.config._
 
 import slick.jdbc.HsqldbProfile.api._
 
-import org.clulab.kbquery.dao.{Entries, Sources}
+import org.clulab.kbquery.dao._
 
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Update for new dao package.
+  *   Last Modified: Begin rewrite to load real data.
   */
 object KBLoader extends App {
+
+  // read default configuration from config file
+  private val config = ConfigFactory.load()
 
   /** The Database: configure and open it. */
   val theDB = Database.forConfig("db.kbqdb")
 
-  /** Create and load the DB with some test data. */
-  def loadTestData: Unit = {
+  /** Read the sources table configuration from the configuration file. */
+  val sourcesConfiguration: List[SourceType] = {
+    val srcMetaInfo = config.getList("db.sources.metaInfo")
+    srcMetaInfo.iterator().asScala.map { srcLine =>
+      val src = srcLine.asInstanceOf[ConfigObject].toConfig
+      val srcId = src.getInt("id")
+      val srcName = src.getString("name")
+      val srcFilename = src.getString("filename")
+      val srcLabel = src.getString("label")
+      (srcId, srcName, srcFilename, srcLabel)
+    }.toList
+  }
 
-    val setup: DBIO[Unit] = DBIO.seq (
-      // create the tables from the DDL
-      (Sources.schema ++ Entries.schema).create,
+
+  /** Create the DB tables from the schema. */
+  def createTables: DBIO[Unit] = {
+    DBIO.seq ( (Sources.schema ++ Entries.schema).create )
+  }
+
+  def loadSources: DBIO[Unit] = {
+    DBIO.seq ( (Sources ++= sourcesConfiguration) )
+  }
+
+  /** Load the entries table. */
+  def loadEntries: DBIO[Unit] = {
+    DBIO.seq (
 
       // create/insert some dummy data:
       Sources ++= Seq (
-        (0, "UNK", ""),
-        (1, "Uniprot", "uniprot-proteins.tsv.gz"),
-        (2, "PFAM", "PFAM-families.tsv.gz"),
-        (3, "PubChem", "PubChem.tsv.gz"),
-        (4, "NER", "NER-Grounding-Override.tsv.gz")
+        (0, "UNK", "", ""),
+        (1, "Uniprot", "uniprot-proteins.tsv.gz", "Gene_or_gene_product"),
+        (2, "PFAM", "PFAM-families.tsv.gz", "Family"),
+        (3, "PubChem", "PubChem.tsv.gz", "Simple_chemical"),
+        (4, "NER", "NER-Grounding-Override.tsv.gz", "")
       ),
 
       Entries ++= Seq (                   // Proteins from NER
@@ -125,16 +149,21 @@ object KBLoader extends App {
         ("COX7a", "pfam", "PF02238", "Family", false, false, "", 0, 2),
         ("COX8",  "pfam", "PF02285", "Family", false, false, "", 0, 2)
       )
-
     )  // setup
-
-    // run setup to create and fill the DB, then shutdown and close DB
-    val shutdown: DBIO[Int] = sqlu"""shutdown"""
-    val setupAndShutdown = setup.andThen(shutdown)
-    Await.result(theDB.run(setupAndShutdown), Duration.Inf)
-    theDB.close
   }
 
-  // now actually load the DB:
-  loadTestData
+  /** Execute SQL command to cleanly shutdown the DB. */
+  def shutdown: DBIO[Int] = sqlu"""shutdown"""
+
+
+  // MAIN:
+  Await.result(theDB.run(createTables), Duration.Inf)
+  Await.result(theDB.run(loadSources), Duration.Inf)
+  Await.result(theDB.run(loadEntries), Duration.Inf)
+  Await.result(theDB.run(shutdown), Duration.Inf)
+
+  // run setup to create and fill the DB, then shutdown and close DB
+  // val setupAndShutdown = setup.andThen(shutdown)
+  // Await.result(theDB.run(setupAndShutdown), Duration.Inf)
+  theDB.close
 }

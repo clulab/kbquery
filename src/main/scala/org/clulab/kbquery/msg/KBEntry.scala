@@ -5,7 +5,7 @@ import Species._
 /**
   * Main class representing a single knowledge base entry.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Rename source fields.
+  *   Last Modified: Update for possibility of implicit label & namespace in KB sources.
   */
 case class KBEntry (
 
@@ -13,12 +13,12 @@ case class KBEntry (
   val text: String,
 
   /** The external namespace for this entry (e.g., go, uniprot). */
-  val namespace: String = DefaultNamespace,
+  val namespace: String,
 
   /** The reference ID, relative to the namespace for this entry (e.g., GO:0033110, P12345). */
   val id: String,
 
-  /** The entry type label, as given by the Reach NER. */
+  /** The entry type label, often inherent in the KB type. */
   val label: String,
 
   /** Does this entry represent a Gene name or Gene synonym. */
@@ -53,14 +53,14 @@ case class KBSource (
   /** A field which indicates the source of the entry within the KB. */
   val id: Int = UnknownSource,
 
-  /** A name to uniquely identify the source KB. */
-  val name: String,
+  /** The implicit namespace for all entries in this KB. */
+  val namespace: String = NoDefaultNamespace,
 
   /** The filename from which the KB was loaded. */
   val filename: String,
 
-  /** The entity type label for every entry in the KB (no value in override or mixed type KBs). */
-  val label: String
+  /** The entity type label for every entry in the KB (empty for override or mixed-label KBs). */
+  val label: String = NoImplicitLabel
 )
 
 /** A list of all source information records. */

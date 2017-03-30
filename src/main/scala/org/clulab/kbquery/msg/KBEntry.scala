@@ -4,6 +4,8 @@ import Species._
 
 /**
   * Main class representing a single knowledge base entry.
+  *   Written by: Tom Hicks. 3/27/2017.
+  *   Last Modified: Add source label field.
   */
 case class KBEntry (
 
@@ -55,7 +57,10 @@ case class KBSource (
   val srcName: String,
 
   /** The filename from which the KB was loaded. */
-  val srcFilename: String
+  val srcFilename: String,
+
+  /** The entity type label for every entry in the KB (no value in override or mixed type KBs). */
+  val srcLabel: String
 )
 
 /** A list of all source information records. */

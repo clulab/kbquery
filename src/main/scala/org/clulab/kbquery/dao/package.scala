@@ -9,7 +9,7 @@ package object dao {
   // type EntryRepType = Rep[EntryType]
 
   /** Type declaration for a row in the Slick-based Sources table. */
-  type SourceType = Tuple3[Int, String, String]
+  type SourceType = Tuple4[Int, String, String, String]
   // type SourceRepType = Rep[SourceType]
 
 }

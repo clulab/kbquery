@@ -9,15 +9,16 @@ import com.typesafe.config._
 import slick.jdbc.HsqldbProfile.api._
 
 import org.clulab.kbquery.dao._
+import org.clulab.kbquery.msg._
 
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Continue rewrite with load plan. Still using fake entries data.
+  *   Last Modified: Stub out file loading in batches. Replace load plan.
   */
 object KBLoader extends App {
 
-  // read default configuration from config file
+  // read configuration from config file
   private val config = ConfigFactory.load()
 
   /** The Database: configure and open it. */
@@ -36,18 +37,31 @@ object KBLoader extends App {
     }.toList
   }
 
-
   /** Create the DB tables from the schema. */
   def createTables: DBIO[Unit] = {
     DBIO.seq ( (Sources.schema ++ Entries.schema).create )
   }
 
+  /** Load the Sources table with the information extracted from the configuration file. */
   def loadSources: DBIO[Unit] = {
     DBIO.seq ( (Sources ++= sourcesConfiguration) )
   }
 
-  /** Load the entries table. */
-  def loadEntries: DBIO[Unit] = {
+  /** Use the Sources configuration to find and load the configured KB files. */
+  def loadFiles: Unit = {
+    val sources:List[KBSource] = sourcesConfiguration.map(row => Sources.toKBSource(row))
+    sources.foreach { src => FileLoader.loadFile(src) }
+  }
+
+  /** Add the given batch of entries to the current KB. Called repeatedly as a co-routine
+     by the file loader. */
+  def loadBatch (batch: Seq[EntryType]): Unit = {
+    Await.result(theDB.run(DBIO.seq((Entries ++= batch))), Duration.Inf)
+  }
+
+
+  /** Load a small Entries table with test data. */
+  def loadTestEntries: DBIO[Unit] = {
     DBIO.seq (
 
       Entries ++= Seq (                   // Proteins from NER
@@ -146,15 +160,13 @@ object KBLoader extends App {
   /** Execute SQL command to cleanly shutdown the DB. */
   def shutdown: DBIO[Int] = sqlu"""shutdown"""
 
-
-  // MAIN:
   //
-  val loadDB = createTables                 // the loading execution plan
-    .andThen(loadSources)
-    .andThen(loadEntries)
-    .andThen(shutdown)
-
-  Await.result(theDB.run(loadDB), Duration.Inf) // execute the loading plan
-
-  theDB.close                                   // close down DB and exit
+  // MAIN: Run the actions sequentially to execute the loading steps.
+  //
+  Await.result(theDB.run(createTables), Duration.Inf)
+  Await.result(theDB.run(loadSources), Duration.Inf)
+  loadFiles
+  // Await.result(theDB.run(loadTestEntries), Duration.Inf)
+  Await.result(theDB.run(shutdown), Duration.Inf)
+  theDB.close                               // close down DB and exit
 }

@@ -8,7 +8,7 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB entries table.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Rename source fields.
+  *   Last Modified: Add method to convert KBEntry to EntryType.
   */
 class Entries (tag: Tag) extends Table[EntryType](tag, "KBE") {
 
@@ -59,6 +59,12 @@ object Entries extends TableQuery(new Entries(_)) {
     Entries.filter(kbe => (kbe.namespace === ns) && (kbe.id === id)).map(_.text)
   }
 
+
+  /** Convert the given KBEntry to an entries table row with the correct shape. */
+  def toEntryType (kbe: KBEntry): EntryType = {
+    (kbe.text, kbe.namespace, kbe.id, kbe.label, kbe.isGeneName,
+      kbe.isShortName, kbe.species, kbe.priority, kbe.sourceIndex)
+  }
 
   /** Convert an entries table row of the correct shape into a KBEntry. */
   def toKBEntry (row: EntryType): KBEntry = {

@@ -14,7 +14,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Rename source fields.
+  *   Last Modified: Reuse field for namespace field.
   */
 object KBLoader extends App {
 
@@ -27,10 +27,10 @@ object KBLoader extends App {
     srcMetaInfo.iterator().asScala.map { srcLine =>
       val src = srcLine.asInstanceOf[ConfigObject].toConfig
       val id = src.getInt("id")
-      val name = src.getString("name")
+      val namespace = src.getString("ns")
       val filename = src.getString("filename")
       val label = src.getString("label")
-      (id, name, filename, label)
+      (id, namespace, filename, label)
     }.toList
   }
 

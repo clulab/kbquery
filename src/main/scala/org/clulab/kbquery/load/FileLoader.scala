@@ -13,7 +13,7 @@ import org.clulab.kbquery.msg._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Move to child package, add package object.
+  *   Last Modified: Comment, move test code.
   */
 object FileLoader {
 
@@ -24,19 +24,11 @@ object FileLoader {
   val KBDirResourcePath = "/org/clulab/reach/kb"
 
 
+  /** Load the KB specified by the given KB source information. */
   def loadFile (src: KBSource): Unit = {
     System.err.println(s"(loadFile): src=${src}") // REMOVE LATER
     System.err.println(s"(loadFile): kbPath=${kbPath}, batch=${batchSize}") // REMOVE LATER
-    var batch = new ListBuffer[EntryType]
-    for (n <- 1 to 4004) {
-      val ent:EntryType = (s"text$n", "ns", s"PQ$n", src.srcLabel, false, false, "", 0, src.srcId)
-      batch += ent
-      if ((n % batchSize) == 0) {
-        KBLoader.loadBatch(batch.toSeq)
-        batch = new ListBuffer[EntryType]
-      }
-    }
-    KBLoader.loadBatch(batch.toSeq)
+
   }
 
   /** Return a file for the given filename in the knowledge bases directory. */
@@ -75,3 +67,14 @@ object FileLoader {
   }
 
 }
+
+// var batch = new ListBuffer[EntryType]
+// for (n <- 1 to 4004) {
+//   val ent:EntryType = (s"text$n", "ns", s"PQ$n", src.label, false, false, "", 0, src.id)
+//   batch += ent
+//   if ((n % batchSize) == 0) {
+//     KBLoader.loadBatch(batch.toSeq)
+//     batch = new ListBuffer[EntryType]
+//   }
+// }
+// KBLoader.loadBatch(batch.toSeq)

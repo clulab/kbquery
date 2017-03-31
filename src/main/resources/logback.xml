@@ -3,13 +3,13 @@
 
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %msg%n</pattern>
         </encoder>
     </appender>
 
     <appender name="file" class="ch.qos.logback.core.FileAppender">
         <param name="Append" value="false" />
-        <file>${HOME:-${USERPROFILE}}/.processors-server.log</file>
+        <file>kbquery.log</file>
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>

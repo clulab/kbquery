@@ -9,6 +9,7 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 
 import akka.actor.{ ActorRef, ActorSystem, Props, Actor }
+import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 
@@ -20,7 +21,7 @@ import BatchMessages._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Allow multiple entry records per input record.
+  *   Last Modified: Add/use logging.
   */
 object KBFileLoader {
 
@@ -29,6 +30,8 @@ object KBFileLoader {
   /** An Akka actor which batches up entries, periodically writing them to the DB. */
   val system = ActorSystem("BatchUpEntries")
   val entryBatcher = system.actorOf(Props(classOf[EntryBatcher], BatchSize), "entryBatcher")
+
+  val logger = Logging(system, getClass)
 
   /** Load the KB specified by the given KB source information. */
   def loadFile (kbInfo: KBSource): Unit = {
@@ -59,6 +62,8 @@ object KBFileLoader {
       }
       source.get.close
       Await.result(ask(entryBatcher, BatchClose), Duration.Inf)
+      if (Verbose)
+        logger.info(s"Finished loading multi-source KB file '$filename'")
     }
   }
 
@@ -77,6 +82,8 @@ object KBFileLoader {
       }
       source.get.close
       Await.result(ask(entryBatcher, BatchClose), Duration.Inf)
+      if (Verbose)
+        logger.info(s"Finished loading single-source KB file '$filename'")
     }
   }
 
@@ -121,7 +128,7 @@ object KBFileLoader {
       return None
     val inFile = new File(KBDirPath + File.separator + filename)
     if (!inFile.exists || !inFile.canRead) { // check for existing readable file
-      System.err.println(s"Error: Unable to find or read from file '$filename'. Skipping.")
+      logger.error(s"Unable to find or read from KB file '$inFile'. Skipping.")
       return None
     }
     else {

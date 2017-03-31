@@ -78,6 +78,15 @@ trait KBQService extends Json4sSupport {
           path("") {                                // index page
             getFromResource("static/index.html")
           } ~
+          pathPrefix("static") {                    // SHOULD WORK BUT DOES NOT
+            getFromResourceDirectory("/static")
+          } ~
+          path("application.css") {                 // application stylesheet
+            getFromResource("static/application.css")
+          } ~
+          path("CLU-notext-trans_68x68.png") { // image
+            getFromResource("images/CLU-notext-trans_68x68.png")
+          } ~
           path("countEntries") {                    // count the KB entry records
             logger.info(s"GET countEntries")
             complete( DBManager.countEntries )

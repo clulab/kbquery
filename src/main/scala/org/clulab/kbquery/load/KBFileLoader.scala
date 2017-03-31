@@ -20,9 +20,9 @@ import BatchMessages._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Add actor system termination.
+  *   Last Modified: Rename class.
   */
-object FileLoader {
+object KBFileLoader {
 
   implicit val timeout:Timeout = Timeout(7.days) // only finite durations allowed
 

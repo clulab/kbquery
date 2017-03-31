@@ -14,7 +14,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Add shutdown of file loader.
+  *   Last Modified: Update for rename of KB file loader.
   */
 object KBLoader extends App {
 
@@ -47,7 +47,7 @@ object KBLoader extends App {
   /** Use the Sources configuration to find and load the configured KB files. */
   def loadFiles: Unit = {
     val sources:List[KBSource] = sourcesConfiguration.map(row => Sources.toKBSource(row))
-    sources.foreach { src => FileLoader.loadFile(src) }
+    sources.foreach { src => KBFileLoader.loadFile(src) }
   }
 
   /** Add the given batch of entries to the current KB. Called repeatedly as a co-routine
@@ -66,6 +66,6 @@ object KBLoader extends App {
   Await.result(theDB.run(loadSources), Duration.Inf)
   loadFiles                                 // the major work: load all KB data files
   Await.result(theDB.run(shutdown), Duration.Inf)
-  FileLoader.shutdown                       // close down the file loader
+  KBFileLoader.shutdown                     // close down the file loader
   theDB.close                               // close down DB and exit
 }

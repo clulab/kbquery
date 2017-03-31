@@ -20,7 +20,7 @@ import akka.stream.Materializer
 /**
   * Trait to provide an Akka HTTP service using Json4s support for marshalling.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Make byText exact, make lookup lookup by transformed keys.
+  *   Last Modified: Add countEntries, countSources.
   */
 trait KBQService extends Json4sSupport {
 
@@ -77,6 +77,14 @@ trait KBQService extends Json4sSupport {
           } ~
           path("") {                                // index page
             getFromResource("static/index.html")
+          } ~
+          path("countEntries") {                    // count the KB entry records
+            logger.info(s"GET countEntries")
+            complete( DBManager.countEntries )
+          } ~
+          path("countSources") {                    // count the KB source records
+            logger.info(s"GET countSources")
+            complete( DBManager.countSources )
           } ~
           path("dumpEntries") {                    // dump the KB entries
             logger.info(s"GET dumpEntries")

@@ -24,7 +24,7 @@ import BatchMessages._
   */
 object FileLoader {
 
-  implicit val timeout:Timeout = Timeout(7.days)
+  implicit val timeout:Timeout = Timeout(7.days) // only finite durations allowed
 
   /** An Akka actor which batches up entries, periodically writing them to the DB. */
   val system = ActorSystem("BatchUpEntries")

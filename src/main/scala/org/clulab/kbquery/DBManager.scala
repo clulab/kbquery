@@ -13,7 +13,7 @@ import org.clulab.kbquery.dao._
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add byTextSet. byText is now exact.
+  *   Last Modified: Add countEntries, countSources.
   */
 object DBManager {
 
@@ -51,7 +51,19 @@ object DBManager {
     return Await.result(data, Duration.Inf)
   }
 
-  /** Return all bioentity entries from the KB. */
+  /** Count all records in the entries KB. */
+  def countEntries: Map[String, Int] = {
+    val count = theDB.run(Entries.length.result.map(c => Map[String, Int]("count" -> c)))
+    return Await.result(count, Duration.Inf)
+  }
+
+  /** Count all records in the sources KB. */
+  def countSources: Map[String, Int] = {
+    val count = theDB.run(Sources.length.result.map(c => Map[String, Int]("count" -> c)))
+    return Await.result(count, Duration.Inf)
+  }
+
+  /** Return all bioentity entries from the KB. WARNING: HUGE!.*/
   def dumpEntries: KBEntries = {
     val data = theDB.run(Entries.result.map(rows => Entries.toKBEntries(rows)))
     return Await.result(data, Duration.Inf)

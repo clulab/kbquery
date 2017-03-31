@@ -7,6 +7,6 @@ package object load {
   // read configuration and values from the configuration file
   val config = ConfigFactory.load()
   val KBDirPath = config.getString("db.sources.KBDirPath")
-  val batchSize = config.getInt("db.sources.batchSize")
+  val BatchSize = config.getInt("db.sources.batchSize")
 
 }

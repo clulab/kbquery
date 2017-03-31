@@ -3,27 +3,39 @@ package org.clulab.kbquery.load
 import java.io._
 import java.util.zip.GZIPInputStream
 
-import scala.collection.mutable.ListBuffer
 import scala.io.Source
-import com.typesafe.config._
+import scala.concurrent.{ Await, Future }
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
+import akka.actor.{ ActorRef, ActorSystem, Props, Actor }
+import akka.pattern.ask
+import akka.util.Timeout
 
 import org.clulab.kbquery.dao._
 import org.clulab.kbquery.msg._
 import org.clulab.kbquery.msg.Species._
+import BatchMessages._
 
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Continue building: file paths.
+  *   Last Modified: Redo file reading. Add/use entry batcher actor.
   */
 object FileLoader {
 
+  implicit val timeout:Timeout = Timeout(7.days)
+
+  /** An Akka actor which batches up entries, periodically writing them to the DB. */
+  val system = ActorSystem("BatchUpEntries")
+  val entryBatcher = system.actorOf(Props(classOf[EntryBatcher], BatchSize), "entryBatcher")
+
   /** Load the KB specified by the given KB source information. */
-  def loadFile (kbsrc: KBSource): Unit = {
-    if (kbsrc.label == NoImplicitLabel)     // if not a single source KB
-      loadMultiSourceKB(kbsrc)
+  def loadFile (kbInfo: KBSource): Unit = {
+    if (kbInfo.label == NoImplicitLabel)     // if not a single source KB
+      loadMultiSourceKB(kbInfo)
     else
-      loadUniSourceKB(kbsrc)
+      loadUniSourceKB(kbInfo)
   }
 
   /**
@@ -35,16 +47,16 @@ object FileLoader {
     *   5th column (4) is the Label string (optional: may be missing if implicit for entire KB)
     * If filename argument is null or the empty string, skip file loading.
     */
-  private def loadMultiSourceKB (src: KBSource) = {
-    val filename = src.filename
-    if ((filename != null) && !filename.trim.isEmpty) { // skip loading if filename missing
-      val kbPath = makePathInKBDir(filename)
-      // TODO: Check for file existance: skip if not LATER
-      val source = sourceFromFile(kbPath)
-      source.getLines.map(tsvRowToFields(_)).filter(validateMultiFields(_)).foreach { fields =>
-        processMultiFields(src, fields)
+  private def loadMultiSourceKB (kbInfo: KBSource): Unit = {
+    val filename = kbInfo.filename
+    val source: Option[Source] = sourceFromFilename(kbInfo.filename)
+    if (source.isDefined) {
+      source.get.getLines.map(tsvRowToFields(_)).filter(validateMultiFields(_)).foreach { fields =>
+        val kbent:EntryType = processMultiFields(kbInfo, fields)
+        Await.result(ask(entryBatcher, BatchAnEntry(kbent)), Duration.Inf)
       }
-      source.close()
+      source.get.close
+      Await.result(ask(entryBatcher, BatchClose), Duration.Inf)
     }
   }
 
@@ -57,54 +69,58 @@ object FileLoader {
     *   5th column (4) is the Label string (ignored: KB has one label type).
     * If filename argument is null or the empty string, skip file loading.
     */
-  private def loadUniSourceKB (src: KBSource) = {
-    val filename = src.filename
-    if ((filename != null) && !filename.trim.isEmpty) { // skip loading if filename missing
-      val kbPath = makePathInKBDir(filename)
-      // TODO: Check for file existance: skip if not LATER
-      val source = sourceFromFile(kbPath)
-      source.getLines.map(tsvRowToFields(_)).filter(validateUniFields(_)).foreach { fields =>
-        processUniFields(src, fields)
+  private def loadUniSourceKB (kbInfo: KBSource): Unit = {
+    val filename = kbInfo.filename
+    val source: Option[Source] = sourceFromFilename(kbInfo.filename)
+    if (source.isDefined) {
+      source.get.getLines.map(tsvRowToFields(_)).filter(validateUniFields(_)).foreach { fields =>
+        val kbent:EntryType = processUniFields(kbInfo, fields)
+        Await.result(ask(entryBatcher, BatchAnEntry(kbent)), Duration.Inf)
       }
-      source.close()
+      source.get.close
+      Await.result(ask(entryBatcher, BatchClose), Duration.Inf)
     }
   }
 
-  /** Return a resource path string for the given filename in the knowledge bases directory. */
-  def makePathInKBDir (filename:String): String = {
-    return KBDirPath + File.separator + filename
+  /** Return a Scala Source object created from the given filename string and
+    * configured KB directory path. If the file path ends with ".gz", the source
+    * is created around a gzip input stream.
+    */
+  private def sourceFromFilename (filename:String): Option[Source] = {
+    if ((filename == null) || filename.trim.isEmpty)
+      return None
+    val inFile = new File(KBDirPath + File.separator + filename)
+    if (!inFile.exists || !inFile.canRead) { // check for existing readable file
+      System.err.println(s"Error: Unable to find or read from file '$filename'. Skipping.")
+      return None
+    }
+    else {
+      val inStream = new FileInputStream(inFile)
+      if (filename.endsWith(".gz"))
+        Some(Source.fromInputStream(new GZIPInputStream(new BufferedInputStream(inStream)), "utf8"))
+      else
+        Some(Source.fromInputStream(inStream, "utf8"))
+    }
   }
 
-  /** Extract fields for multi-source input file and process them as needed. */
-  private def processMultiFields (src: KBSource, fields: Seq[String]): Unit = {
+  /** Extract and return fields from a single multi-source input record. */
+  private def processMultiFields (kbInfo: KBSource, fields: Seq[String]): EntryType = {
     val text = fields(0)
     val id = fields(1)
     val species = if (fields(2) != Species.NoSpeciesValue) fields(2) else Species.Human
     val namespace = fields(3)
-    val label = if (fields.size > 4) fields(5) else src.label
-    val kbe = KBEntry(text, namespace, id, label, false, false, species, OverridePriority, src.id)
-    // TODO: save the new record LATER
+    val label = if (fields.size > 4) fields(4) else kbInfo.label
+    new EntryType(text, namespace, id, label, false, false, species, OverridePriority, kbInfo.id)
   }
 
-  /** Extract fields for uni-source input file and process them as needed. */
-  private def processUniFields (src: KBSource, fields: Seq[String]): Unit = {
+  /** Extract and return fields from a single uni-source input record. */
+  private def processUniFields (kbInfo: KBSource, fields: Seq[String]): EntryType = {
     val text = fields(0)
     val id = fields(1)
     val species = if (fields.size > 2) fields(2) else NoSpeciesValue
-    val namespace = src.namespace
-    val label = src.label
-    val kbe = KBEntry(text, namespace, id, label, false, false, species, DefaultPriority, src.id)
-    // TODO: save the new record LATER
-  }
-
-  /** Return a Scala Source object created from the given resource path string. If the
-    * resource path ends with ".gz" the source is created around a gzip input stream. */
-  def sourceFromFile (filePath:String): Source = {
-    val inStream = new FileInputStream(filePath)
-    if (filePath.endsWith(".gz"))
-      Source.fromInputStream(new GZIPInputStream(new BufferedInputStream(inStream)), "utf8")
-    else
-      Source.fromInputStream(inStream, "utf8")
+    val namespace = kbInfo.namespace
+    val label = kbInfo.label
+    new EntryType(text, namespace, id, label, false, false, species, DefaultPriority, kbInfo.id)
   }
 
   /** Convert a single row string from a TSV file to a sequence of string fields. */
@@ -114,7 +130,6 @@ object FileLoader {
 
   /** Check for required fields in one row of the multi-source input file. */
   private def validateMultiFields (fields:Seq[String]): Boolean = {
-    // LATER: REQUIRE the Label field (field 5)??
     if (fields.size < 4) return false       // sanity check
     return fields(0).nonEmpty && fields(1).nonEmpty && fields(3).nonEmpty
   }
@@ -125,14 +140,3 @@ object FileLoader {
   }
 
 }
-
-// var batch = new ListBuffer[EntryType]
-// for (n <- 1 to 4004) {
-//   val ent:EntryType = (s"text$n", "ns", s"PQ$n", src.label, false, false, "", 0, src.id)
-//   batch += ent
-//   if ((n % batchSize) == 0) {
-//     KBLoader.loadBatch(batch.toSeq)
-//     batch = new ListBuffer[EntryType]
-//   }
-// }
-// KBLoader.loadBatch(batch.toSeq)

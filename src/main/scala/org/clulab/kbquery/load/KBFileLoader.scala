@@ -20,7 +20,7 @@ import BatchMessages._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Rename class.
+  *   Last Modified: Allow multiple entry records per input record.
   */
 object KBFileLoader {
 
@@ -44,13 +44,8 @@ object KBFileLoader {
   }
 
 
-  /**
-    * Load this KB from the given 4-5 column, tab-separated-value (TSV) text file.
-    *   1st column (0) is the text string,
-    *   2nd column (1) is the ID string,
-    *   3rd column (2) is the Species string (optional content),
-    *   4th column (3) is the Namespace string (required),
-    *   5th column (4) is the Label string (optional: may be missing if implicit for entire KB)
+  /** Use the given KB source information to load records from a multi-source KB file.
+    * The KB file must be a 4-5 column, tab-separated-value (TSV) text file.
     * If filename argument is null or the empty string, skip file loading.
     */
   private def loadMultiSourceKB (kbInfo: KBSource): Unit = {
@@ -58,21 +53,17 @@ object KBFileLoader {
     val source: Option[Source] = sourceFromFilename(kbInfo.filename)
     if (source.isDefined) {
       source.get.getLines.map(tsvRowToFields(_)).filter(validateMultiFields(_)).foreach { fields =>
-        val kbent:EntryType = processMultiFields(kbInfo, fields)
-        Await.result(ask(entryBatcher, BatchAnEntry(kbent)), Duration.Inf)
+        entryFromMultiFields(kbInfo, fields).foreach { kbent =>
+          Await.result(ask(entryBatcher, BatchAnEntry(kbent)), Duration.Inf)
+        }
       }
       source.get.close
       Await.result(ask(entryBatcher, BatchClose), Duration.Inf)
     }
   }
 
-  /**
-    * Load this KB from the given 2-5 column, tab-separated-value (TSV) text file.
-    *   1st column (0) is the text string,
-    *   2nd column (1) is the ID string,
-    *   3rd column (2) is the Species string (optional content),
-    *   4th column (3) is the Namespace string (ignored: KB has one namespace),
-    *   5th column (4) is the Label string (ignored: KB has one label type).
+  /** Use the given KB source information to load records from a single-source KB file.
+    * The KB file must be a 2-5 column, tab-separated-value (TSV) text file.
     * If filename argument is null or the empty string, skip file loading.
     */
   private def loadUniSourceKB (kbInfo: KBSource): Unit = {
@@ -80,12 +71,45 @@ object KBFileLoader {
     val source: Option[Source] = sourceFromFilename(kbInfo.filename)
     if (source.isDefined) {
       source.get.getLines.map(tsvRowToFields(_)).filter(validateUniFields(_)).foreach { fields =>
-        val kbent:EntryType = processUniFields(kbInfo, fields)
-        Await.result(ask(entryBatcher, BatchAnEntry(kbent)), Duration.Inf)
+        entryFromUniFields(kbInfo, fields).foreach { kbent =>
+          Await.result(ask(entryBatcher, BatchAnEntry(kbent)), Duration.Inf)
+        }
       }
       source.get.close
       Await.result(ask(entryBatcher, BatchClose), Duration.Inf)
     }
+  }
+
+  /** Process fields from a single multi-source input record to create zero or more entries.
+    *   1st column (0) is the text string,
+    *   2nd column (1) is the ID string,
+    *   3rd column (2) is the Species string (optional content),
+    *   4th column (3) is the Namespace string (required),
+    *   5th column (4) is the Label string (optional: may be missing if implicit for entire KB)
+    */
+  private def entryFromMultiFields (kbInfo: KBSource, fields: Seq[String]): Seq[EntryType] = {
+    val text = fields(0)
+    val id = fields(1)
+    val species = if (fields(2) != Species.NoSpeciesValue) fields(2) else Species.Human
+    val namespace = fields(3)
+    val label = if (fields.size > 4) fields(4) else kbInfo.label
+    Seq(new EntryType(text, namespace, id, label, false, false, species, OverridePriority, kbInfo.id))
+  }
+
+  /** Extract fields to create zero or more entries from a single uni-source input record.
+    *   1st column (0) is the text string,
+    *   2nd column (1) is the ID string,
+    *   3rd column (2) is the Species string (optional content),
+    *   4th column (3) is the Namespace string (ignored: KB has one namespace),
+    *   5th column (4) is the Label string (ignored: KB has one label type).
+    */
+  private def entryFromUniFields (kbInfo: KBSource, fields: Seq[String]): Seq[EntryType] = {
+    val text = fields(0)
+    val id = fields(1)
+    val species = if (fields.size > 2) fields(2) else NoSpeciesValue
+    val namespace = kbInfo.namespace
+    val label = kbInfo.label
+    Seq(new EntryType(text, namespace, id, label, false, false, species, DefaultPriority, kbInfo.id))
   }
 
   /** Return a Scala Source object created from the given filename string and
@@ -107,26 +131,6 @@ object KBFileLoader {
       else
         Some(Source.fromInputStream(inStream, "utf8"))
     }
-  }
-
-  /** Extract and return fields from a single multi-source input record. */
-  private def processMultiFields (kbInfo: KBSource, fields: Seq[String]): EntryType = {
-    val text = fields(0)
-    val id = fields(1)
-    val species = if (fields(2) != Species.NoSpeciesValue) fields(2) else Species.Human
-    val namespace = fields(3)
-    val label = if (fields.size > 4) fields(4) else kbInfo.label
-    new EntryType(text, namespace, id, label, false, false, species, OverridePriority, kbInfo.id)
-  }
-
-  /** Extract and return fields from a single uni-source input record. */
-  private def processUniFields (kbInfo: KBSource, fields: Seq[String]): EntryType = {
-    val text = fields(0)
-    val id = fields(1)
-    val species = if (fields.size > 2) fields(2) else NoSpeciesValue
-    val namespace = kbInfo.namespace
-    val label = kbInfo.label
-    new EntryType(text, namespace, id, label, false, false, species, DefaultPriority, kbInfo.id)
   }
 
   /** Convert a single row string from a TSV file to a sequence of string fields. */

@@ -14,7 +14,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Remove test data.
+  *   Last Modified: Add shutdown of file loader.
   */
 object KBLoader extends App {
 
@@ -66,5 +66,6 @@ object KBLoader extends App {
   Await.result(theDB.run(loadSources), Duration.Inf)
   loadFiles                                 // the major work: load all KB data files
   Await.result(theDB.run(shutdown), Duration.Inf)
+  FileLoader.shutdown                       // close down the file loader
   theDB.close                               // close down DB and exit
 }

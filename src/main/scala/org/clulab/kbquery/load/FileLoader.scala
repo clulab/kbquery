@@ -20,7 +20,7 @@ import BatchMessages._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Redo file reading. Add/use entry batcher actor.
+  *   Last Modified: Add actor system termination.
   */
 object FileLoader {
 
@@ -37,6 +37,12 @@ object FileLoader {
     else
       loadUniSourceKB(kbInfo)
   }
+
+  /** Called by external code to perform any shutdown cleanup actions. */
+  def shutdown: Unit = {
+    system.terminate                        // shutdown Actor system
+  }
+
 
   /**
     * Load this KB from the given 4-5 column, tab-separated-value (TSV) text file.

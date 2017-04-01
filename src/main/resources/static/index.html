@@ -73,47 +73,89 @@
           <thead>
             <tr>
               <th>Endpoint</th>
-              <th>Request type</th>
-              <th>Request form</th>
+              <th>Request Type</th>
+              <th>Request JSON or URL</th>
               <th>Description</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td><code>/kblu/lookup</code></td>
-              <td><code>GET | POST</code></td>
-              <td><code>{"text":"entity text string"}</code></td>
+              <td><code>GET</code></td>
+              <td><code>?text=a+string</code></td>
               <td>Transform the given text string in various ways and lookup the resulting
-                strings in the <code>Entries</code> database table.
+                strings in the <code>Entries</code> database table. Return all records
+                whose <code>text</code> field matches any of the transformed strings.
+              </td>
+            </tr>
+            <tr>
+              <td><code>/kblu/lookup</code></td>
+              <td><code>POST</code></td>
+              <td><code>{"text":"a string"}</code></td>
+              <td>Transform the given text string in various ways and lookup the resulting
+                strings in the <code>Entries</code> database table. Return all records
+                whose <code>text</code> field matches any of the transformed strings.
               </td>
             </tr>
             <tr>
               <td><code>/kblu/byText</code></td>
-              <td><code>GET | POST</code></td>
-              <td><code>{"text":""}</code></td>
-              <td>Lookup the given text string in the <code>Entries</code> database table.
+              <td><code>GET</code></td>
+              <td><code>?text=a+string</code></td>
+              <td>Return records from the <code>Entries</code> database table whose
+                  <code>text</code> field exactly matches the given text argument.
+              </td>
+            </tr>
+            <tr>
+              <td><code>/kblu/byText</code></td>
+              <td><code>POST</code></td>
+              <td><code>{"text":"a+string"}</code></td>
+              <td>Return records from the <code>Entries</code> database table whose
+                  <code>text</code> field exactly matches the given text argument.
               </td>
             </tr>
             <tr>
               <td><code>/kblu/byNsId</code></td>
-              <td><code>GET | POST</code></td>
-              <td><code>{"nsId":"namespace:ID"}</code></td>
+              <td><code>GET</code></td>
+              <td><code>?nsId=namespace:id</code></td>
+              <td>Lookup the given namespace:id string and return all entries with the
+                given namespace and ID.
+              </td>
+            </tr>
+            <tr>
+              <td><code>/kblu/byNsId</code></td>
+              <td><code>POST</code></td>
+              <td><code>{"nsId":"namespace:id"}</code></td>
               <td>Lookup the given namespace:id string and return all entries with the
                 given namespace and ID.
               </td>
             </tr>
             <tr>
               <td><code>/kblu/byNsAndId</code></td>
-              <td><code>GET | POST</code></td>
-              <td><code>{"ns":"namespace", "id":"ID"}</code></td>
+              <td><code>GET</code></td>
+              <td><code>?ns=namespace&id=id</code></td>
+              <td>Lookup the given namespace and ID strings and return all entries with
+                  the given namespace and ID.</td>
+            </tr>
+            <tr>
+              <td><code>/kblu/byNsAndId</code></td>
+              <td><code>POST</code></td>
+              <td><code>{"ns":"namespace", "id":"id"}</code></td>
               <td>Lookup the given namespace and ID strings and return all entries with
                   the given namespace and ID.</td>
             </tr>
             <tr>
               <td><code>/kblu/synonyms</code></td>
-              <td><code>GET | POST</code></td>
-              <td><code>{"nsId":"namespace:ID"}</code></td>
-              <td>Lookup the given Namespace:ID string and return just the text strings from
+              <td><code>GET</code></td>
+              <td><code>?nsId=namespace:id</code></td>
+              <td>Lookup the given namespace:id string and return just the text strings from
+                  all entries with the given namespace and ID.
+              </td>
+            </tr>
+            <tr>
+              <td><code>/kblu/synonyms</code></td>
+              <td><code>POST</code></td>
+              <td><code>{"nsId":"namespace:id"}</code></td>
+              <td>Lookup the given namespace:id string and return just the text strings from
                   all entries with the given namespace and ID.
               </td>
             </tr>

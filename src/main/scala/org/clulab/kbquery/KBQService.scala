@@ -20,7 +20,7 @@ import akka.stream.Materializer
 /**
   * Trait to provide an Akka HTTP service using Json4s support for marshalling.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Add countEntries, countSources.
+  *   Last Modified: Duplicate GET control services as POST, too.
   */
 trait KBQService extends Json4sSupport {
 
@@ -104,6 +104,7 @@ trait KBQService extends Json4sSupport {
             complete( DBManager.dumpSources )
           } ~
           path("version") {                         // show version
+            logger.info(s"GET version")
             complete( ("version" -> appVersion) )
           }
         } ~
@@ -140,7 +141,24 @@ trait KBQService extends Json4sSupport {
               }
             }
           } ~
+          path("countEntries") {                    // count the KB entry records
+            logger.info(s"POST countEntries")
+            complete( DBManager.countEntries )
+          } ~
+          path("countSources") {                    // count the KB source records
+            logger.info(s"POST countSources")
+            complete( DBManager.countSources )
+          } ~
+          path("dumpSources") {                    // dump the KB source meta information
+            logger.info(s"POST dumpSources")
+            complete( DBManager.dumpSources )
+          } ~
+          path("version") {                         // show version
+            logger.info(s"POST version")
+            complete( ("version" -> appVersion) )
+          } ~
           path("shutdown") {                        // shut down the server
+            logger.info(s"POST shutdown")
             // complete request and then shut down the server in 1 second
             complete {
               in (1.second) {

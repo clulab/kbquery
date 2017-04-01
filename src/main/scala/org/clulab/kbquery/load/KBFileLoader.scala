@@ -23,7 +23,7 @@ import BatchMessages._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Add logic to generate multiple entries by tranforming keys.
+  *   Last Modified: Add/use max field size. Use namespace if given in uni-source files.
   */
 object KBFileLoader {
 
@@ -109,14 +109,14 @@ object KBFileLoader {
     *   1st column (0) is the text string,
     *   2nd column (1) is the ID string,
     *   3rd column (2) is the Species string (optional content),
-    *   4th column (3) is the Namespace string (ignored: KB has one namespace),
+    *   4th column (3) is the Namespace string (optional: use if present, else use metaInfo)
     *   5th column (4) is the Label string (ignored: KB has one label type).
     */
   private def entryFromUniFields (kbInfo: KBSource, fields: Seq[String]): KBEntry = {
     val text = fields(0)
     val id = fields(1)
     val species = if (fields.size > 2) fields(2) else NoSpeciesValue
-    val namespace = kbInfo.namespace
+    val namespace = if ((fields.size > 3) && fields(3).nonEmpty) fields(3) else kbInfo.namespace
     val label = kbInfo.label
     KBEntry(text, namespace, id, label, false, false, species, DefaultPriority, kbInfo.id)
   }
@@ -160,12 +160,22 @@ object KBFileLoader {
   /** Check for required fields in one row of the multi-source input file. */
   private def validateMultiFields (fields:Seq[String]): Boolean = {
     if (fields.size < 4) return false       // sanity check
-    return fields(0).nonEmpty && fields(1).nonEmpty && fields(3).nonEmpty
+    val text = fields(0)
+    if (text.isEmpty || (text.size > MaxFieldSize)) {
+      logger.warning(s"Text field must be non-empty or less than $MaxFieldSize characters: '$text'")
+      return false
+    }
+    return fields(1).nonEmpty && fields(3).nonEmpty
   }
 
   /** Check for required fields in one row of a standard, uni-source input file. */
   private def validateUniFields (fields:Seq[String]): Boolean = {
-    (fields.size >= 2) && fields(0).nonEmpty && fields(1).nonEmpty
+    val text = fields(0)
+    if (text.isEmpty || (text.size > MaxFieldSize)) {
+      logger.warning(s"Text field must be non-empty or less than $MaxFieldSize characters: '$text'")
+      return false
+    }
+    return (fields.size >= 2) && fields(1).nonEmpty
   }
 
 }

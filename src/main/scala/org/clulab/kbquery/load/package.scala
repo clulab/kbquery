@@ -8,6 +8,7 @@ package object load {
   val config = ConfigFactory.load()
   val KBDirPath = config.getString("db.sources.KBDirPath")
   val BatchSize = config.getInt("db.sources.batchSize")
+  val MaxFieldSize = config.getInt("db.sources.maxFieldSize")
   val Verbose = config.getBoolean("app.verbose")
 
 }

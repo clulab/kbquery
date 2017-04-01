@@ -25,10 +25,11 @@ header, footer, nav, article, aside, section {
   border-bottom: 2px solid #003366;
 }
 
-.navbar .navbar-brand {
+.navbar-brand {
   font-size: 1.4em;
   color: white;
   text-shadow: 3px 3px 2px #003366;
+  margin-top: 0;
 }
 
 .navbar-nav > li > a, .navbar-right > li > a {
@@ -276,7 +277,8 @@ h1 {
 }
 
 .indented {
-  margin-left: 15px;
+  margin-left: 20px;
+  margin-right: 20px;
 }
 
 .indented .label {

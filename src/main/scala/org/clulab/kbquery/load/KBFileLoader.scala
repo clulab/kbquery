@@ -4,6 +4,7 @@ import java.io._
 import java.util.zip.GZIPInputStream
 
 import scala.io.Source
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -13,6 +14,7 @@ import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 
+import org.clulab.kbquery.KBKeyTransforms._
 import org.clulab.kbquery.dao._
 import org.clulab.kbquery.msg._
 import org.clulab.kbquery.msg.Species._
@@ -21,7 +23,7 @@ import BatchMessages._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Add/use logging.
+  *   Last Modified: Add logic to generate multiple entries by tranforming keys.
   */
 object KBFileLoader {
 
@@ -56,7 +58,7 @@ object KBFileLoader {
     val source: Option[Source] = sourceFromFilename(kbInfo.filename)
     if (source.isDefined) {
       source.get.getLines.map(tsvRowToFields(_)).filter(validateMultiFields(_)).foreach { fields =>
-        entryFromMultiFields(kbInfo, fields).foreach { kbent =>
+        generateEntries(entryFromMultiFields(kbInfo, fields)).foreach { kbent =>
           Await.result(ask(entryBatcher, BatchAnEntry(kbent)), Duration.Inf)
         }
       }
@@ -76,7 +78,7 @@ object KBFileLoader {
     val source: Option[Source] = sourceFromFilename(kbInfo.filename)
     if (source.isDefined) {
       source.get.getLines.map(tsvRowToFields(_)).filter(validateUniFields(_)).foreach { fields =>
-        entryFromUniFields(kbInfo, fields).foreach { kbent =>
+        generateEntries(entryFromUniFields(kbInfo, fields)).foreach { kbent =>
           Await.result(ask(entryBatcher, BatchAnEntry(kbent)), Duration.Inf)
         }
       }
@@ -94,13 +96,13 @@ object KBFileLoader {
     *   4th column (3) is the Namespace string (required),
     *   5th column (4) is the Label string (optional: may be missing if implicit for entire KB)
     */
-  private def entryFromMultiFields (kbInfo: KBSource, fields: Seq[String]): Seq[EntryType] = {
+  private def entryFromMultiFields (kbInfo: KBSource, fields: Seq[String]): KBEntry = {
     val text = fields(0)
     val id = fields(1)
     val species = if (fields(2) != Species.NoSpeciesValue) fields(2) else Species.Human
     val namespace = fields(3)
     val label = if (fields.size > 4) fields(4) else kbInfo.label
-    Seq(new EntryType(text, namespace, id, label, false, false, species, OverridePriority, kbInfo.id))
+    KBEntry(text, namespace, id, label, false, false, species, OverridePriority, kbInfo.id)
   }
 
   /** Extract fields to create zero or more entries from a single uni-source input record.
@@ -110,13 +112,23 @@ object KBFileLoader {
     *   4th column (3) is the Namespace string (ignored: KB has one namespace),
     *   5th column (4) is the Label string (ignored: KB has one label type).
     */
-  private def entryFromUniFields (kbInfo: KBSource, fields: Seq[String]): Seq[EntryType] = {
+  private def entryFromUniFields (kbInfo: KBSource, fields: Seq[String]): KBEntry = {
     val text = fields(0)
     val id = fields(1)
     val species = if (fields.size > 2) fields(2) else NoSpeciesValue
     val namespace = kbInfo.namespace
     val label = kbInfo.label
-    Seq(new EntryType(text, namespace, id, label, false, false, species, DefaultPriority, kbInfo.id))
+    KBEntry(text, namespace, id, label, false, false, species, DefaultPriority, kbInfo.id)
+  }
+
+  /** Generate one or more KB storable entries by transforming the given entry object. */
+  private def generateEntries (kbent: KBEntry): Seq[EntryType] = {
+    val entries = ListBuffer[EntryType]()
+    val textSet = applyAllTransforms(DefaultKeyTransforms, kbent.text).toSet
+    textSet.foreach { key =>
+      entries += Entries.generateEntryType(key, kbent)
+    }
+    entries.toSeq                           // return possibly empty sequence of entries
   }
 
   /** Return a Scala Source object created from the given filename string and

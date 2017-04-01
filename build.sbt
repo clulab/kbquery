@@ -1,6 +1,6 @@
 name := "kbquery"
 
-version := "0.0.4"
+version := "0.11.0"
 
 scalaVersion := "2.11.8"
 
@@ -59,6 +59,12 @@ libraryDependencies ++= {
     "com.typesafe.scala-logging"  %%  "scala-logging"                      % "3.4.0"
   )
 }
+
+// main class is the server and not the KB loader
+mainClass in assembly := Some("org.clulab.kbquery.KBQueryServer")
+
+// skip the tests when assembling the FAT JAR
+test in assembly := {}
 
 assemblyJarName := { s"kbquery.jar" }
 

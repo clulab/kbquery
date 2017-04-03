@@ -33,8 +33,8 @@ case class KBEntry (
   /** The search priority level: 0 = normal, higher numbers = higher priority. */
   val priority: Int = DefaultPriority,
 
-  /** A field which indicates the source of the entry within the KB. */
-  val sourceIndex: Int = UnknownSource
+  /** A foreign key field which indicates the source of the entry within the KB. */
+  val sourceNdx: Int = UnknownSource
 
 ) extends Message
 
@@ -63,7 +63,7 @@ case class KBSource (
   val label: String = NoImplicitLabel
 )
 
-/** A list of all source information records. */
+/** A list of source information records. */
 case class KBSources (
   val sources: List[KBSource]
 ) extends Message

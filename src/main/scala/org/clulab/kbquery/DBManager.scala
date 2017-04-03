@@ -13,7 +13,7 @@ import org.clulab.kbquery.dao._
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add countEntries, countSources.
+  *   Last Modified: Trivial matches to keys branch.
   */
 object DBManager {
 
@@ -51,13 +51,13 @@ object DBManager {
     return Await.result(data, Duration.Inf)
   }
 
-  /** Count all records in the entries KB. */
+  /** Count all records in the Entries KB. */
   def countEntries: Map[String, Int] = {
     val count = theDB.run(Entries.length.result.map(c => Map[String, Int]("count" -> c)))
     return Await.result(count, Duration.Inf)
   }
 
-  /** Count all records in the sources KB. */
+  /** Count all records in the Sources KB. */
   def countSources: Map[String, Int] = {
     val count = theDB.run(Sources.length.result.map(c => Map[String, Int]("count" -> c)))
     return Await.result(count, Duration.Inf)

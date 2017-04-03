@@ -56,7 +56,7 @@ object KBLoader extends App {
     Await.result(theDB.run(DBIO.seq((Entries ++= batch))), Duration.Inf)
   }
 
-  /** Execute SQL command to cleanly shutdown the DB. */
+  /** Execute SQL command to cleanly shutdown the DB. Useful only for embedded DBs. */
   def shutdown: DBIO[Int] = sqlu"""shutdown"""
 
   //

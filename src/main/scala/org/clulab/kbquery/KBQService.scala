@@ -20,7 +20,7 @@ import akka.stream.Materializer
 /**
   * Trait to provide an Akka HTTP service using Json4s support for marshalling.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Duplicate GET control services as POST, too.
+  *   Last Modified: Move dumpEntries to POST only.
   */
 trait KBQService extends Json4sSupport {
 
@@ -84,7 +84,7 @@ trait KBQService extends Json4sSupport {
           path("application.css") {                 // application stylesheet
             getFromResource("static/application.css")
           } ~
-          path("CLU-notext-trans_68x68.png") { // image
+          path("CLU-notext-trans_68x68.png") {      // image
             getFromResource("images/CLU-notext-trans_68x68.png")
           } ~
           path("countEntries") {                    // count the KB entry records
@@ -95,11 +95,7 @@ trait KBQService extends Json4sSupport {
             logger.info(s"GET countSources")
             complete( DBManager.countSources )
           } ~
-          path("dumpEntries") {                    // dump the KB entries
-            logger.info(s"GET dumpEntries")
-            complete( DBManager.dumpEntries )
-          } ~
-          path("dumpSources") {                    // dump the KB source meta information
+          path("dumpSources") {                     // dump the KB source meta information
             logger.info(s"GET dumpSources")
             complete( DBManager.dumpSources )
           } ~
@@ -149,7 +145,11 @@ trait KBQService extends Json4sSupport {
             logger.info(s"POST countSources")
             complete( DBManager.countSources )
           } ~
-          path("dumpSources") {                    // dump the KB source meta information
+          path("dumpEntries") {                     // dump the KB entry records
+            logger.info(s"POST dumpEntries")
+            complete( DBManager.dumpEntries )
+          } ~
+          path("dumpSources") {                     // dump the KB source meta information
             logger.info(s"POST dumpSources")
             complete( DBManager.dumpSources )
           } ~

@@ -8,9 +8,9 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB entries table.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add method to generate an EntryType by copying a KBEntry with new text.
+  *   Last Modified: Rename generated tables to match keys branch.
   */
-class Entries (tag: Tag) extends Table[EntryType](tag, "KBE") {
+class Entries (tag: Tag) extends Table[EntryType](tag, "ENTRIES") {
 
   // NB: Any field changes, additions, or deletions must also be updated in the package types!
   def text: Rep[String]         = column[String]("text")
@@ -21,15 +21,15 @@ class Entries (tag: Tag) extends Table[EntryType](tag, "KBE") {
   def isShortName: Rep[Boolean] = column[Boolean]("is_short_name")
   def species: Rep[String]      = column[String]("species")
   def priority: Rep[Int]        = column[Int]("priority")
-  def sourceIndex: Rep[Int]     = column[Int]("source")
+  def sourceNdx: Rep[Int]       = column[Int]("source_ndx")
 
   // every table needs a * projection with the same type as the table's type parameter
   def * : ProvenShape[EntryType] =
-    (text, namespace, id, label, isGeneName, isShortName, species, priority, sourceIndex)
+    (text, namespace, id, label, isGeneName, isShortName, species, priority, sourceNdx)
 
   // a reified foreign key relation that can be navigated to create a join
   def source: ForeignKeyQuery[Sources, SourceType] =
-    foreignKey("SRC_FK", sourceIndex, TableQuery[Sources])(_.id)
+    foreignKey("SRC_FK", sourceNdx, TableQuery[Sources])(_.uid)
 
 }
 
@@ -38,6 +38,26 @@ class Entries (tag: Tag) extends Table[EntryType](tag, "KBE") {
   * Companion object which represents the actual database table.
   */
 object Entries extends TableQuery(new Entries(_)) {
+
+  /** Convert the given KBEntry to an entries table row with the correct shape. */
+  def toEntryType (kbe: KBEntry): EntryType = {
+    (kbe.text, kbe.namespace, kbe.id, kbe.label, kbe.isGeneName,
+      kbe.isShortName, kbe.species, kbe.priority, kbe.sourceNdx)
+  }
+
+  /** Convert an entries table row of the correct shape into a KBEntry. */
+  def toKBEntry (row: EntryType): KBEntry = {
+    KBEntry(row._1, row._2, row._3, row._4, row._5, row._6, row._7, row._8, row._9)
+  }
+
+  /** Convert a sequence of table rows into a KBEntries object. */
+  def toKBEntries (rows: Seq[EntryType]): KBEntries = {
+    KBEntries(rows.map(row => toKBEntry(row)).toList)
+  }
+
+  /** Convert a sequence of synonym strings into a Synonyms object. */
+  def toSynonyms (syns: Seq[String]): Synonyms = Synonyms(syns.toSet.toList)
+
 
   /** Query to find records by namespace and ID strings. */
   def findByNsAndId (ns:String, id:String): Query[Entries, EntryType, Seq] = {
@@ -64,26 +84,7 @@ object Entries extends TableQuery(new Entries(_)) {
       substitution of the given new text field. */
   def generateEntryType (newText: String, kbe: KBEntry): EntryType = {
     (newText, kbe.namespace, kbe.id, kbe.label, kbe.isGeneName,
-      kbe.isShortName, kbe.species, kbe.priority, kbe.sourceIndex)
+      kbe.isShortName, kbe.species, kbe.priority, kbe.sourceNdx)
   }
-
-  /** Convert the given KBEntry to an entries table row with the correct shape. */
-  def toEntryType (kbe: KBEntry): EntryType = {
-    (kbe.text, kbe.namespace, kbe.id, kbe.label, kbe.isGeneName,
-      kbe.isShortName, kbe.species, kbe.priority, kbe.sourceIndex)
-  }
-
-  /** Convert an entries table row of the correct shape into a KBEntry. */
-  def toKBEntry (row: EntryType): KBEntry = {
-    KBEntry(row._1, row._2, row._3, row._4, row._5, row._6, row._7, row._8, row._9)
-  }
-
-  /** Convert a sequence of table rows into a KBEntries object. */
-  def toKBEntries (rows: Seq[EntryType]): KBEntries = {
-    KBEntries(rows.map(row => toKBEntry(row)).toList)
-  }
-
-  /** Convert a sequence of synonym strings into a Synonyms object. */
-  def toSynonyms (syns: Seq[String]): Synonyms = Synonyms(syns.toSet.toList)
 
 }

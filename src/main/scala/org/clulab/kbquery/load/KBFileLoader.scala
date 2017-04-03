@@ -23,7 +23,7 @@ import BatchMessages._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Add/use max field size. Use namespace if given in uni-source files.
+  *   Last Modified: Add/use short label mapper to reduce record size.
   */
 object KBFileLoader {
 
@@ -34,6 +34,21 @@ object KBFileLoader {
   val entryBatcher = system.actorOf(Props(classOf[EntryBatcher], BatchSize), "entryBatcher")
 
   val logger = Logging(system, getClass)
+
+  /** Map a label string to an abbreviated form. */
+  val shortLabel = Map[String, String] (
+    ("BioProcess" -> "BP"),
+    ("Family" -> "F"),
+    ("Gene_or_gene_product" -> "G"),
+    ("Cellular_component" -> "CC"),
+    ("CellLine" -> "CL"),
+    ("CellType" -> "CT"),
+    ("Organ" -> "O"),
+    ("Simple_chemical" -> "SC"),
+    ("Species" -> "SP"),
+    ("TissueType" -> "TT")
+  )
+
 
   /** Load the KB specified by the given KB source information. */
   def loadFile (kbInfo: KBSource): Unit = {
@@ -101,7 +116,7 @@ object KBFileLoader {
     val id = fields(1)
     val species = if (fields(2) != Species.NoSpeciesValue) fields(2) else Species.Human
     val namespace = fields(3)
-    val label = if (fields.size > 4) fields(4) else kbInfo.label
+    val label = shortLabel.getOrElse(if (fields.size > 4) fields(4) else kbInfo.label, "X")
     KBEntry(text, namespace, id, label, false, false, species, OverridePriority, kbInfo.id)
   }
 
@@ -117,7 +132,7 @@ object KBFileLoader {
     val id = fields(1)
     val species = if (fields.size > 2) fields(2) else NoSpeciesValue
     val namespace = if ((fields.size > 3) && fields(3).nonEmpty) fields(3) else kbInfo.namespace
-    val label = kbInfo.label
+    val label = shortLabel.getOrElse(kbInfo.label, "X")
     KBEntry(text, namespace, id, label, false, false, species, DefaultPriority, kbInfo.id)
   }
 

@@ -40,6 +40,8 @@ libraryDependencies ++= {
 
     // database
     "mysql"                        % "mysql-connector-java"                % "5.1.38",
+    "org.scalikejdbc"             %% "scalikejdbc"                         % "2.5.1",
+    "org.scalikejdbc"             %% "scalikejdbc-config"                  % "2.5.1",
     "com.typesafe.slick"          %%  "slick"                              % slickV,
     "com.typesafe.slick"          %%  "slick-hikaricp"                     % slickV,
 
@@ -53,6 +55,7 @@ libraryDependencies ++= {
     "org.specs2"                  %%  "specs2-core"                        % "2.3.11"  % "test",
     "com.typesafe.akka"           %%  "akka-testkit"                       % akkaV     % "test",
     "org.scalatest"               %% "scalatest"                           % "2.2.6"   % "test",
+    "org.scalikejdbc"             %% "scalikejdbc-test"                    % "2.5.1"   % "test",
 
     // logging
     "ch.qos.logback"               %  "logback-classic"                    % "1.1.7",

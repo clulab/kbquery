@@ -8,7 +8,7 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB entries table.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Switch to MySQL. Add UID as primary key.
+  *   Last Modified: Refactor variant generator to file loader.
   */
 class Entries (tag: Tag) extends Table[EntryType](tag, "ENTRIES") {
 
@@ -83,13 +83,6 @@ object Entries extends TableQuery(new Entries(_)) {
   /** Query to find a namespace by label and ID strings. */
   def findNsByLabelAndId (label:String, id:String): Query[Rep[String], String, Seq] = {
     Entries.filter(kbe => (kbe.label === label) && (kbe.id === id)).map(_.namespace)
-  }
-
-  /** Return a new entry record mutated from the given KB entry object by
-      substitution of the given new text field. */
-  def generateEntryType (newText: String, kbe: KBEntry): EntryType = {
-    (0, newText, kbe.namespace, kbe.id, kbe.label, kbe.isGeneName,
-      kbe.isShortName, kbe.species, kbe.priority, kbe.sourceNdx)
   }
 
 }

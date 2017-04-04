@@ -5,7 +5,7 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.typesafe.config._
 
-import slick.jdbc.HsqldbProfile.api._
+import slick.jdbc.MySQLProfile.api._
 
 import org.clulab.kbquery.msg._
 import org.clulab.kbquery.dao._
@@ -13,7 +13,7 @@ import org.clulab.kbquery.dao._
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Trivial matches to keys branch.
+  *   Last Modified: Switch to MySQL.
   */
 object DBManager {
 

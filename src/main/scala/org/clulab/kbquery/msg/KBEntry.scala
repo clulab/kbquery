@@ -5,9 +5,12 @@ import Species._
 /**
   * Main class representing a single knowledge base entry.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Update for possibility of implicit label & namespace in KB sources.
+  *   Last Modified: Add UID as primary key.
   */
 case class KBEntry (
+
+  /** Unique primary key for this entry. */
+  val uid: Int,
 
   /** Text for this entry, as found in the external KB. */
   val text: String,

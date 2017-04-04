@@ -1,6 +1,6 @@
 package org.clulab.kbquery.dao
 
-import slick.jdbc.HsqldbProfile.api._
+import slick.jdbc.MySQLProfile.api._
 import slick.lifted.ProvenShape
 
 import org.clulab.kbquery.msg._
@@ -8,7 +8,7 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB Sources table; holding meta info on the source of the KBs.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Reuse field for namespace field.
+  *   Last Modified: Switch to MySQL.
   */
 class Sources (tag: Tag) extends Table[SourceType] (tag, "SOURCES") {
 
@@ -20,7 +20,6 @@ class Sources (tag: Tag) extends Table[SourceType] (tag, "SOURCES") {
 
   // every table needs a * projection with the same type as the table's type parameter
   def * : ProvenShape[SourceType] = (uid, namespace, filename, label)
-
 }
 
 

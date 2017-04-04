@@ -23,7 +23,7 @@ import BatchMessages._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Add/use short label mapper to reduce record size.
+  *   Last Modified: Update for addition of primary key.
   */
 object KBFileLoader {
 
@@ -117,7 +117,7 @@ object KBFileLoader {
     val species = if (fields(2) != Species.NoSpeciesValue) fields(2) else Species.Human
     val namespace = fields(3)
     val label = shortLabel.getOrElse(if (fields.size > 4) fields(4) else kbInfo.label, "X")
-    KBEntry(text, namespace, id, label, false, false, species, OverridePriority, kbInfo.id)
+    KBEntry(0, text, namespace, id, label, false, false, species, OverridePriority, kbInfo.id)
   }
 
   /** Extract fields to create zero or more entries from a single uni-source input record.
@@ -133,10 +133,10 @@ object KBFileLoader {
     val species = if (fields.size > 2) fields(2) else NoSpeciesValue
     val namespace = if ((fields.size > 3) && fields(3).nonEmpty) fields(3) else kbInfo.namespace
     val label = shortLabel.getOrElse(kbInfo.label, "X")
-    KBEntry(text, namespace, id, label, false, false, species, DefaultPriority, kbInfo.id)
+    KBEntry(0, text, namespace, id, label, false, false, species, DefaultPriority, kbInfo.id)
   }
 
-  /** Generate one or more KB storable entries by transforming the given entry object. */
+  /** Generate one or more KB keys by transforming the text of the given entry object. */
   private def generateEntries (kbent: KBEntry): Seq[EntryType] = {
     val entries = ListBuffer[EntryType]()
     val textSet = applyAllTransforms(DefaultKeyTransforms, kbent.text).toSet

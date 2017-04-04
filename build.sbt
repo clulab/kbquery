@@ -39,7 +39,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"           %%  "akka-slf4j"                         % akkaV,
 
     // database
-    "org.hsqldb"                   %  "hsqldb"                             % "2.3.4",
+    "mysql"                        % "mysql-connector-java"                % "5.1.38",
     "com.typesafe.slick"          %%  "slick"                              % slickV,
     "com.typesafe.slick"          %%  "slick-hikaricp"                     % slickV,
 

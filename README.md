@@ -51,10 +51,9 @@ Usage: kbquery [--host <hostname>]  [--port <port#>]
 
 ## Database
 
-The KBQuery Server application uses [HyperSQL](http://hsqldb.org/) (aka HSQLDB)
+The KBQuery Server application uses a local [MySQL](http://mysql.org/) server
 as the database and [Slick](http://slick.lightbend.com/) as the database
-access library. By default, the server looks for HSQLDB database files
-with names `kbqdb.*` in the directory in which the application was started.
+access library.
 
 
 ### Building a new Database
@@ -69,19 +68,15 @@ class; the `KBLoader`. To run the `KBLoader` class from the command line with `s
 
 By default, the `KBLoader` program expects its `Bioresources` input KB files to
 be located in a subdirectory of the startup directory named `KBs`. The name of
-the created database is, by default, `kbqdb` and HSQLDB database files with
-this prefix are generated into the startup directory. The `KBLoader` and
-database parameters can be changed in the `application.conf` configuration file.
+the created database is, by default, `kbqdb`. The `KBLoader` and database
+ parameters can be changed in the `application.conf` configuration file.
 
-**NOTE:** If you intend to rebuild the database, you must first move or delete
-the existing HSQLDB files (the `kbqdb.*` files).
+**NOTE:** If you choose to re-run KBLoader to reload the database, all
+existing tables (**with their data**) will be dropped.
 
 ## Licenses
 
 KBQuery Server is licensed under the Apache License Version 2.0.
-
-A copy of the [HSQLDB license](http://hsqldb.org/web/hsqlLicense.html) is provided
-in the LICENSES subdirectory.
 
 A copy of the [Slick license](https://github.com/slick/slick/blob/master/LICENSE.txt)
 is provided in the LICENSES subdirectory.

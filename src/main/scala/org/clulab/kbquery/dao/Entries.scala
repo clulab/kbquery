@@ -1,6 +1,6 @@
 package org.clulab.kbquery.dao
 
-import slick.jdbc.HsqldbProfile.api._
+import slick.jdbc.MySQLProfile.api._
 import slick.lifted.{ProvenShape, ForeignKeyQuery}
 
 import org.clulab.kbquery.msg._
@@ -8,11 +8,12 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB entries table.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Rename generated tables to match keys branch.
+  *   Last Modified: Switch to MySQL. Add UID as primary key.
   */
 class Entries (tag: Tag) extends Table[EntryType](tag, "ENTRIES") {
 
   // NB: Any field changes, additions, or deletions must also be updated in the package types!
+  def uid: Rep[Int]             = column[Int]("uid", O.PrimaryKey, O.AutoInc)
   def text: Rep[String]         = column[String]("text")
   def namespace: Rep[String]    = column[String]("namespace")
   def id: Rep[String]           = column[String]("id")
@@ -25,12 +26,11 @@ class Entries (tag: Tag) extends Table[EntryType](tag, "ENTRIES") {
 
   // every table needs a * projection with the same type as the table's type parameter
   def * : ProvenShape[EntryType] =
-    (text, namespace, id, label, isGeneName, isShortName, species, priority, sourceNdx)
+    (uid, text, namespace, id, label, isGeneName, isShortName, species, priority, sourceNdx)
 
   // a reified foreign key relation that can be navigated to create a join
   def source: ForeignKeyQuery[Sources, SourceType] =
     foreignKey("SRC_FK", sourceNdx, TableQuery[Sources])(_.uid)
-
 }
 
 
@@ -41,13 +41,13 @@ object Entries extends TableQuery(new Entries(_)) {
 
   /** Convert the given KBEntry to an entries table row with the correct shape. */
   def toEntryType (kbe: KBEntry): EntryType = {
-    (kbe.text, kbe.namespace, kbe.id, kbe.label, kbe.isGeneName,
+    (0, kbe.text, kbe.namespace, kbe.id, kbe.label, kbe.isGeneName,
       kbe.isShortName, kbe.species, kbe.priority, kbe.sourceNdx)
   }
 
   /** Convert an entries table row of the correct shape into a KBEntry. */
   def toKBEntry (row: EntryType): KBEntry = {
-    KBEntry(row._1, row._2, row._3, row._4, row._5, row._6, row._7, row._8, row._9)
+    KBEntry(row._1, row._2, row._3, row._4, row._5, row._6, row._7, row._8, row._9, row._10)
   }
 
   /** Convert a sequence of table rows into a KBEntries object. */
@@ -80,10 +80,15 @@ object Entries extends TableQuery(new Entries(_)) {
   }
 
 
+  /** Query to find a namespace by label and ID strings. */
+  def findNsByLabelAndId (label:String, id:String): Query[Rep[String], String, Seq] = {
+    Entries.filter(kbe => (kbe.label === label) && (kbe.id === id)).map(_.namespace)
+  }
+
   /** Return a new entry record mutated from the given KB entry object by
       substitution of the given new text field. */
   def generateEntryType (newText: String, kbe: KBEntry): EntryType = {
-    (newText, kbe.namespace, kbe.id, kbe.label, kbe.isGeneName,
+    (0, newText, kbe.namespace, kbe.id, kbe.label, kbe.isGeneName,
       kbe.isShortName, kbe.species, kbe.priority, kbe.sourceNdx)
   }
 

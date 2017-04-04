@@ -5,7 +5,7 @@ import Species._
 /**
   * Main class representing a single knowledge base entry.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add UID as primary key.
+  *   Last Modified: Add method to convert KBEntry to a sequence of its values.
   */
 case class KBEntry (
 
@@ -39,7 +39,12 @@ case class KBEntry (
   /** A foreign key field which indicates the source of the entry within the KB. */
   val sourceNdx: Int = UnknownSource
 
-) extends Message
+) extends Message {
+
+  /** Convert this KBEntry to a sequence of its member values. */
+  def toSeq: Seq[Any] =
+    Seq(uid, text, namespace, id, label, isGeneName, isShortName, species, priority, sourceNdx)
+}
 
 
 /** A set of knowledge base entries, mostly a result of querying the KB. */

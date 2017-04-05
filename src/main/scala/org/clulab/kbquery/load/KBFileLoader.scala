@@ -4,36 +4,19 @@ import java.io._
 import java.util.zip.GZIPInputStream
 
 import scala.io.Source
-import scala.collection.mutable.ListBuffer
-import scala.concurrent.{ Await, Future }
-import scala.concurrent.duration._
-import scala.language.postfixOps
-
-import akka.actor.{ ActorRef, ActorSystem, Props, Actor }
-import akka.event.Logging
-import akka.pattern.ask
-import akka.util.Timeout
+import com.typesafe.scalalogging.LazyLogging
 
 import org.clulab.kbquery.KBKeyTransforms._
 import org.clulab.kbquery.dao._
 import org.clulab.kbquery.msg._
 import org.clulab.kbquery.msg.Species._
-import BatchMessages._
 
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Update for addition of primary key.
+  *   Last Modified: Update for switch to ScalikeJDBC.
   */
-object KBFileLoader {
-
-  implicit val timeout:Timeout = Timeout(7.days) // only finite durations allowed
-
-  /** An Akka actor which batches up entries, periodically writing them to the DB. */
-  val system = ActorSystem("BatchUpEntries")
-  val entryBatcher = system.actorOf(Props(classOf[EntryBatcher], BatchSize), "entryBatcher")
-
-  val logger = Logging(system, getClass)
+object KBFileLoader extends LazyLogging {
 
   /** Map a label string to an abbreviated form. */
   val shortLabel = Map[String, String] (
@@ -49,7 +32,6 @@ object KBFileLoader {
     ("TissueType" -> "TT")
   )
 
-
   /** Load the KB specified by the given KB source information. */
   def loadFile (kbInfo: KBSource): Unit = {
     if (kbInfo.label == NoImplicitLabel)     // if not a single source KB
@@ -57,12 +39,6 @@ object KBFileLoader {
     else
       loadUniSourceKB(kbInfo)
   }
-
-  /** Called by external code to perform any shutdown cleanup actions. */
-  def shutdown: Unit = {
-    system.terminate                        // shutdown Actor system
-  }
-
 
   /** Use the given KB source information to load records from a multi-source KB file.
     * The KB file must be a 4-5 column, tab-separated-value (TSV) text file.
@@ -73,12 +49,10 @@ object KBFileLoader {
     val source: Option[Source] = sourceFromFilename(kbInfo.filename)
     if (source.isDefined) {
       source.get.getLines.map(tsvRowToFields(_)).filter(validateMultiFields(_)).foreach { fields =>
-        generateEntries(entryFromMultiFields(kbInfo, fields)).foreach { kbent =>
-          Await.result(ask(entryBatcher, BatchAnEntry(kbent)), Duration.Inf)
-        }
+        val entries = generateEntries(entryFromMultiFields(kbInfo, fields))
+        if (entries.nonEmpty)  KBLoader.loadBatch(entries)
       }
       source.get.close
-      Await.result(ask(entryBatcher, BatchClose), Duration.Inf)
       if (Verbose)
         logger.info(s"Finished loading multi-source KB file '$filename'")
     }
@@ -93,12 +67,10 @@ object KBFileLoader {
     val source: Option[Source] = sourceFromFilename(kbInfo.filename)
     if (source.isDefined) {
       source.get.getLines.map(tsvRowToFields(_)).filter(validateUniFields(_)).foreach { fields =>
-        generateEntries(entryFromUniFields(kbInfo, fields)).foreach { kbent =>
-          Await.result(ask(entryBatcher, BatchAnEntry(kbent)), Duration.Inf)
-        }
+        val entries = generateEntries(entryFromUniFields(kbInfo, fields))
+        if (entries.nonEmpty)  KBLoader.loadBatch(entries)
       }
       source.get.close
-      Await.result(ask(entryBatcher, BatchClose), Duration.Inf)
       if (Verbose)
         logger.info(s"Finished loading single-source KB file '$filename'")
     }
@@ -137,13 +109,17 @@ object KBFileLoader {
   }
 
   /** Generate one or more KB keys by transforming the text of the given entry object. */
-  private def generateEntries (kbent: KBEntry): Seq[EntryType] = {
-    val entries = ListBuffer[EntryType]()
+  private def generateEntries (kbent: KBEntry): Seq[KBEntry] = {
     val textSet = applyAllTransforms(DefaultKeyTransforms, kbent.text).toSet
-    textSet.foreach { key =>
-      entries += Entries.generateEntryType(key, kbent)
-    }
+    val entries = textSet.map { key => generateVariant(key, kbent) }
     entries.toSeq                           // return possibly empty sequence of entries
+  }
+
+  /** Return a new entry record varying from the given KB entry object by
+      substitution of the given new text field. */
+  def generateVariant (newText: String, kbe: KBEntry): KBEntry = {
+    KBEntry(0, newText, kbe.namespace, kbe.id, kbe.label, kbe.isGeneName,
+            kbe.isShortName, kbe.species, kbe.priority, kbe.sourceNdx)
   }
 
   /** Return a Scala Source object created from the given filename string and
@@ -177,7 +153,7 @@ object KBFileLoader {
     if (fields.size < 4) return false       // sanity check
     val text = fields(0)
     if (text.isEmpty || (text.size > MaxFieldSize)) {
-      logger.warning(s"Text field must be non-empty or less than $MaxFieldSize characters: '$text'")
+      logger.warn(s"Text field must be non-empty or less than $MaxFieldSize characters: '$text'")
       return false
     }
     return fields(1).nonEmpty && fields(3).nonEmpty
@@ -187,7 +163,7 @@ object KBFileLoader {
   private def validateUniFields (fields:Seq[String]): Boolean = {
     val text = fields(0)
     if (text.isEmpty || (text.size > MaxFieldSize)) {
-      logger.warning(s"Text field must be non-empty or less than $MaxFieldSize characters: '$text'")
+      logger.warn(s"Text field must be non-empty or less than $MaxFieldSize characters: '$text'")
       return false
     }
     return (fields.size >= 2) && fields(1).nonEmpty

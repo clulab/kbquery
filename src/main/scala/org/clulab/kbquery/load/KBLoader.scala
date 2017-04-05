@@ -1,8 +1,9 @@
 package org.clulab.kbquery.load
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable.ListBuffer
+// import scala.collection.mutable.ListBuffer
 import com.typesafe.config._
+import com.typesafe.scalalogging.LazyLogging
 
 import scalikejdbc._
 import scalikejdbc.config._
@@ -12,11 +13,14 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Switch to ScalikeJDBC: initial table creation.
+  *   Last Modified: Continue switch to ScalikeJDBC: load all tables.
   */
-object KBLoader extends App {
+object KBLoader extends App with LazyLogging {
 
   val argsList = args.toList                // save any command line arguments
+
+  // implicit session provider makes Scalike interface much easier to use
+  implicit val session = AutoSession
 
   // Initialize JDBC driver & connection pool
   Class.forName(config.getString("db.kbqdb.driver"))
@@ -26,9 +30,6 @@ object KBLoader extends App {
     config.getString("db.kbqdb.password")
   )
   // DBs.setup('kbqdb)                         // Use with configured connection pool
-
-  // ad-hoc session provider on the REPL
-  implicit val session = AutoSession
 
   /** Read the sources table configuration from the configuration file. */
   val sourcesConfiguration: KBSources = {
@@ -99,13 +100,14 @@ CREATE TABLE `ENTRIES` (
 
   /** Use the Sources configuration to find and load the configured KB files. */
   def loadFiles: Unit = {
-    // TODO: UNCOMMENT AND RUN THIS:
-    // sourcesConfiguration.sources.foreach { src => KBFileLoader.loadFile(src) }
+    sourcesConfiguration.sources.foreach { src => KBFileLoader.loadFile(src) }
   }
 
+
   /** Add the given batch of entries to the current KB. */
-  def loadBatch (batch: List[KBEntry]): Unit = {
-    // TODO: IMPLEMENT LATER
+  def loadBatch (data: Seq[KBEntry]): Unit = {
+    val batchData: Seq[Seq[Any]] = data.map(_.toSeq)
+    sql"insert into Entries values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)".batch(batchData: _*).apply()
   }
 
   /** Execute SQL command to cleanly shutdown the DB. Only useful for embedded DBs. */
@@ -114,9 +116,11 @@ CREATE TABLE `ENTRIES` (
   //
   // MAIN: Run the actions sequentially to execute the loading steps.
   //
+  dropTables
   createTables
-  loadSources
-//  loadFiles                                 // the major work: load all KB data files
-//  shutdown                                  // close down the file loader
-//  theDB.close                               // close down DB and exit
+  loadSources                               // load the KB meta info table from config
+  loadFiles                                 // the major work: load all KB data files
+  // shutdown                               // close down/cleanup the loader
+  if (Verbose)
+    logger.info("Finished loading all configured KB files.")
 }

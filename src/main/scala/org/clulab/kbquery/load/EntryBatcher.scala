@@ -1,57 +1,57 @@
 package org.clulab.kbquery.load
 
 import scala.collection.mutable.ListBuffer
+import com.typesafe.config._
+import com.typesafe.scalalogging.LazyLogging
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
-import scala.language.postfixOps
+import scalikejdbc._
+import scalikejdbc.config._
 
-import akka.actor.{ ActorRef, ActorSystem, Props, Actor }
-import akka.actor.Actor
-
-import org.clulab.kbquery.dao._
 import org.clulab.kbquery.msg._
-import BatchMessages._
 
 /**
-  * Akka Actor to batch up entries and write them to the DB.
-  *   Written by Tom Hicks. 3/30/2017.
-  *   Last Modified: Initial creation.
+  * Singleton which accumulates a limited, configurable number of entries before
+  * periodically writing them all to the database as a batch.
+  *   Written by: Tom Hicks. 4/4/2017.
+  *   Last Modified: Initial creation for ScalikeJDBC.
   */
-class EntryBatcher (batchSize:Int) extends Actor {
-  var batch = new ListBuffer[EntryType]     // buffer to hold the current batch
-  var count: Int = 0                        // count of items in the current batch
+object EntryBatcher extends LazyLogging {
+  private val config = ConfigFactory.load()
+  private val batchSize = config.getInt("app.loader.batchSize")
 
-  def receive = {
+  private val batch = new ListBuffer[KBEntry] // buffer to hold the current batch of entries
+  private var fileTotal: Int = 0            // count of items from the current input file
+  private var total: Int = 0                // total count of all entries processed
 
-    case BatchAnEntry(entry) =>
-      batch += entry                        // add entry to batch
-      count += 1                            // increment current batch count
-      if (count > batchSize) {              // if batch exceeds size
-        KBLoader.loadBatch(batch.toSeq)     // then write out the batch
-        batch.clear                         // and reset the batch to empty
-        count = 0                           // and reset the batch count
-      }
-      sender ! EntryBatched(count)          // reply to sender with current count
+  /** Tell whether batching is being used or not. */
+  def batchEnabled: Boolean = (batchSize > 0)
 
-    case BatchClose =>
-      KBLoader.loadBatch(batch.toSeq)       // write remaining items in batch
-      sender ! EntryBatched(count)          // reply to sender with current count
-
-    case _ =>
-
+  /** Add the given sequence of entries to the current batch waiting to be written to the DB. */
+  def addBatch (entries: Seq[KBEntry]): Int = {
+    val numEntries = entries.size           // remember number given in this round
+    batch ++= entries                       // add given entries to current batch
+    fileTotal += numEntries                 // increment count for the current input file
+    total += numEntries                     // increment total items count
+    // if batch exceeds batch size OR batch not enabled
+    if (!batchEnabled || (batch.size > batchSize)) {
+      KBLoader.writeBatch(batch.toSeq)      // then write out the batch
+      batch.clear                           // and reset the batch to empty
+    }
+    return numEntries                       // return number of entries processed
   }
-}
 
+  /** Flush any remaining entries to the database and return total count of items written. */
+  def flushBatch: Int = {
+    KBLoader.writeBatch(batch.toSeq)        // write remaining items in the batch
+    batch.clear                             // and reset the batch to empty
+    return total                            // return total items written
+  }
 
-/** Object which defines messages used by the EntryBatcher actor. */
-object BatchMessages {
-
-  sealed trait BatchMessage
-  case class BatchAnEntry (anEntry: EntryType) extends BatchMessage
-  case object BatchClose extends BatchMessage
-
-  sealed trait BatchResponse
-  case class EntryBatched (batchCount:Int) extends BatchResponse
+  /** Reset the current input file record count and return the value before reset. */
+  def resetFileCount: Int = {
+    val cnt = fileTotal                     // save the file count
+    fileTotal = 0                           // reset the counter
+    return cnt                              // return the count before reset
+  }
 
 }

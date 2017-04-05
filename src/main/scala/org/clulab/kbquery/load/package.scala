@@ -6,9 +6,12 @@ package object load {
 
   // read configuration and values from the configuration file
   val config = ConfigFactory.load()
-  val KBDirPath = config.getString("app.sources.KBDirPath")
-  val BatchSize = config.getInt("app.sources.batchSize")
-  val MaxFieldSize = config.getInt("app.sources.maxFieldSize")
+  val KBDirPath = config.getString("app.loader.KBDirPath")
+  val MaxFieldSize = config.getInt("app.loader.maxFieldSize")
+  val ShowTruncated = config.getBoolean("app.loader.showTruncated")
   val Verbose = config.getBoolean("app.verbose")
+
+  val MultiLabel = "M"                      // constant indicating type of KB read
+  val UniLabel = "U"                        // constant indicating type of KB read
 
 }

@@ -14,7 +14,7 @@ import org.clulab.kbquery.msg.Species._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Update for switch to ScalikeJDBC.
+  *   Last Modified: Conditional truncation warnings, move finished messages.
   */
 object KBFileLoader extends LazyLogging {
 
@@ -33,11 +33,15 @@ object KBFileLoader extends LazyLogging {
   )
 
   /** Load the KB specified by the given KB source information. */
-  def loadFile (kbInfo: KBSource): Unit = {
-    if (kbInfo.label == NoImplicitLabel)     // if not a single source KB
-      loadMultiSourceKB(kbInfo)
-    else
-      loadUniSourceKB(kbInfo)
+  def loadFile (kbInfo: KBSource): String = {
+    if (kbInfo.label == NoImplicitLabel) {  // if not a single source KB
+      loadMultiSourceKB(kbInfo)             // process a multi-source KB
+      return MultiLabel                     // signal which type of KB was read
+    }
+    else {
+      loadUniSourceKB(kbInfo)               // process a single-source KB
+      return UniLabel                       // signal which type of KB was read
+    }
   }
 
   /** Use the given KB source information to load records from a multi-source KB file.
@@ -50,11 +54,9 @@ object KBFileLoader extends LazyLogging {
     if (source.isDefined) {
       source.get.getLines.map(tsvRowToFields(_)).filter(validateMultiFields(_)).foreach { fields =>
         val entries = generateEntries(entryFromMultiFields(kbInfo, fields))
-        if (entries.nonEmpty)  KBLoader.loadBatch(entries)
+        if (entries.nonEmpty)  KBLoader.loadEntries(entries)
       }
       source.get.close
-      if (Verbose)
-        logger.info(s"Finished loading multi-source KB file '$filename'")
     }
   }
 
@@ -68,11 +70,9 @@ object KBFileLoader extends LazyLogging {
     if (source.isDefined) {
       source.get.getLines.map(tsvRowToFields(_)).filter(validateUniFields(_)).foreach { fields =>
         val entries = generateEntries(entryFromUniFields(kbInfo, fields))
-        if (entries.nonEmpty)  KBLoader.loadBatch(entries)
+        if (entries.nonEmpty)  KBLoader.loadEntries(entries)
       }
       source.get.close
-      if (Verbose)
-        logger.info(s"Finished loading single-source KB file '$filename'")
     }
   }
 
@@ -96,7 +96,7 @@ object KBFileLoader extends LazyLogging {
     *   1st column (0) is the text string,
     *   2nd column (1) is the ID string,
     *   3rd column (2) is the Species string (optional content),
-    *   4th column (3) is the Namespace string (optional: use if present, else use metaInfo)
+    *   4th column (3) is the Namespace string (optional: use if present, else use source info)
     *   5th column (4) is the Label string (ignored: KB has one label type).
     */
   private def entryFromUniFields (kbInfo: KBSource, fields: Seq[String]): KBEntry = {
@@ -153,7 +153,8 @@ object KBFileLoader extends LazyLogging {
     if (fields.size < 4) return false       // sanity check
     val text = fields(0)
     if (text.isEmpty || (text.size > MaxFieldSize)) {
-      logger.warn(s"Text field must be non-empty or less than $MaxFieldSize characters: '$text'")
+      if (ShowTruncated)
+        logger.warn(s"Text field must be non-empty or less than $MaxFieldSize characters: '$text'")
       return false
     }
     return fields(1).nonEmpty && fields(3).nonEmpty
@@ -163,7 +164,8 @@ object KBFileLoader extends LazyLogging {
   private def validateUniFields (fields:Seq[String]): Boolean = {
     val text = fields(0)
     if (text.isEmpty || (text.size > MaxFieldSize)) {
-      logger.warn(s"Text field must be non-empty or less than $MaxFieldSize characters: '$text'")
+      if (ShowTruncated)
+        logger.warn(s"Text field must be non-empty or less than $MaxFieldSize characters: '$text'")
       return false
     }
     return (fields.size >= 2) && fields(1).nonEmpty

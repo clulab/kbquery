@@ -20,7 +20,7 @@ import akka.stream.Materializer
 /**
   * Trait to provide an Akka HTTP service using Json4s support for marshalling.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Move dumpEntries to POST only.
+  *   Last Modified: Split and then concatenate routes.
   */
 trait KBQService extends Json4sSupport {
 
@@ -40,7 +40,7 @@ trait KBQService extends Json4sSupport {
   def makeRoute (config: Config): Route = {
     val appVersion = config.getString("app.version")
 
-    val routes = {
+    val routesGet = {
       logRequestResult("kbquery-microservice") {    // wrap contained paths in logger
         get {                               // GETS
           pathPrefix("kblu") {
@@ -103,7 +103,12 @@ trait KBQService extends Json4sSupport {
             logger.info(s"GET version")
             complete( ("version" -> appVersion) )
           }
-        } ~
+        }
+      }
+    }  // routesGet
+
+    val routesPost = {
+      logRequestResult("kbquery-microservice") {    // wrap contained paths in logger
         post {                              // POSTS
           pathPrefix("kblu") {
             path("lookup") {                        // by transformed text string(s)
@@ -168,10 +173,10 @@ trait KBQService extends Json4sSupport {
             }
           }
         }  // post
-      }  // log wrapper
-    }  // routes
+      }
+    }  // routesPost
 
-    routes                                  // return constructed routes
+    routesGet ~ routesPost                  // return concatenated routes
   }
 
 }

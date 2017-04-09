@@ -11,7 +11,7 @@ import akka.stream.ActorMaterializer
 /**
   * App to query knowledge bases via Akka HTTP service.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Make some vals private. Remove init resources method.
+  *   Last Modified: Trivial relabel of actor system.
   */
 object KBQueryServer extends App with KBQService {
 
@@ -54,7 +54,7 @@ object KBQueryServer extends App with KBQService {
     .withValue(defaultHostName, ConfigValueFactory.fromAnyRef(host))
     .withValue(defaultPort, ConfigValueFactory.fromAnyRef(port))
 
-  override implicit val system: ActorSystem = ActorSystem("akka", config)
+  override implicit val system: ActorSystem = ActorSystem("kbquery", config)
   override implicit val executionContext = system.dispatcher
   override implicit val materializer: ActorMaterializer = ActorMaterializer()
 

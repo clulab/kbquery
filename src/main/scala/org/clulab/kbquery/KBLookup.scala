@@ -7,7 +7,7 @@ import org.clulab.kbquery.KBKeyTransforms._
 /**
   * Singleton class implementing knowledge base lookup and manipulation methods.
   *   Written by: Tom Hicks. 3/25/2017.
-  *   Last Modified: Add exact lookupText, make lookup lookup by transformed keys.
+  *   Last Modified: Add byId lookup.
   */
 object KBLookup {
 
@@ -17,6 +17,11 @@ object KBLookup {
   /** Constant denoting an empty set of strings. */
   val NoTexts: List[String] = List.empty[String]
 
+
+  /** Return the (possibly empty) set of KB entries for the given ID string, in any namespace. */
+  def lookupId (id:String): KBEntries = {
+    return DBManager.byId(id)
+  }
 
   /** Return the (possibly empty) set of KB entries for the given NS/ID string. */
   def lookupNsId (nsId: String): KBEntries = {

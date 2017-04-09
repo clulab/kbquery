@@ -20,7 +20,7 @@ import akka.stream.Materializer
 /**
   * Trait to provide an Akka HTTP service using Json4s support for marshalling.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Split and then concatenate routes.
+  *   Last Modified: Add byId lookup.
   */
 trait KBQService extends Json4sSupport {
 
@@ -54,6 +54,12 @@ trait KBQService extends Json4sSupport {
               parameters("text") { text =>
                 logger.info(s"GET kblu/byText -> ${text}")
                 complete(KBLookup.lookupText(text))
+              }
+            } ~
+            path("byId") {                          // by ID only
+              parameters("id") { (id) =>
+                logger.info(s"GET kblu/byId -> ${id}")
+                 complete(KBLookup.lookupId(id))
               }
             } ~
             path("byNsId") {                        // by NS/ID string
@@ -121,6 +127,12 @@ trait KBQService extends Json4sSupport {
               entity(as[msg.TextMessage]) { msg =>
                 logger.info(s"POST kblu/byText -> ${msg}")
                 complete(KBLookup.lookupText(msg.text))
+              }
+            } ~
+            path("byId") {                          // by ID only
+              entity(as[msg.Id]) { msg =>
+                logger.info(s"POST kblu/byId -> ${msg}")
+                complete(KBLookup.lookupId(msg.id))
               }
             } ~
             path("byNsId") {                        // by NS/ID string

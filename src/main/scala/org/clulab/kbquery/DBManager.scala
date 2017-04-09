@@ -13,7 +13,7 @@ import org.clulab.kbquery.dao._
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Switch to MySQL.
+  *   Last Modified: Add byId lookup.
   */
 object DBManager {
 
@@ -27,6 +27,11 @@ object DBManager {
   def queryToKBEntries (query: Query[Entries, EntryType, Seq]): KBEntries = {
     val data = theDB.run(query.result.map(rows => Entries.toKBEntries(rows)))
     return Await.result(data, Duration.Inf)
+  }
+
+  /** Return the (possibly empty) set of KB entries for the given ID string, in any namespace. */
+  def byId (id:String): KBEntries = {
+    queryToKBEntries(Entries.findById(id))
   }
 
   /** Return the (possibly empty) set of KB entries for the given namespace and ID string. */

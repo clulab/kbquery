@@ -14,8 +14,12 @@ curl -s 'http://localhost:8888/countEntries'; echo ""
 curl -s 'http://localhost:8888/dumpSources' | wc
 curl -s 'http://localhost:8888/kblu/byNsId?nsId=uniprot:P31749' | wc
 curl -s 'http://localhost:8888/kblu/synonyms?nsId=uniprot:P31749' | wc
+curl -s 'http://localhost:8888/kblu/byNsAndId?ns=uniprot&id=P31749' | wc
+curl -s 'http://localhost:8888/kblu/byId?id=P31749' | wc
 curl -s 'http://localhost:8888/kblu/byNsId?nsId=pubchem:5870' | wc
 curl -s 'http://localhost:8888/kblu/synonyms?nsId=pubchem:5870' | wc
+curl -s 'http://localhost:8888/kblu/byNsAndId?ns=pubchem&id=5870' | wc
+curl -s 'http://localhost:8888/kblu/byId?id=5870' | wc
 curl -s 'http://localhost:8888/kblu/byText?text=BLOOD' | wc
 curl -s 'http://localhost:8888/kblu/lookup?text=BLOOD' | wc
 curl -s 'http://localhost:8888/kblu/byText?text=brown+fat' | wc
@@ -36,10 +40,14 @@ curl -s -XPOST 'http://localhost:8888/version'; echo ""
 curl -s -XPOST 'http://localhost:8888/countSources'; echo ""
 curl -s -XPOST 'http://localhost:8888/countEntries'; echo ""
 curl -s -XPOST 'http://localhost:8888/dumpSources' | wc
-curl -s -XPOST 'http://localhost:8888/kblu/byNsId'   -d'{"nsId": "uniprot:P31749"}' -H "$PTYPE" | wc
-curl -s -XPOST 'http://localhost:8888/kblu/synonyms' -d'{"nsId": "uniprot:P31749"}' -H "$PTYPE" | wc
-curl -s -XPOST 'http://localhost:8888/kblu/byNsId'   -d'{"nsId": "pubchem:5870"}'   -H "$PTYPE" | wc
-curl -s -XPOST 'http://localhost:8888/kblu/synonyms' -d'{"nsId": "pubchem:5870"}'   -H "$PTYPE" | wc
+curl -s -XPOST 'http://localhost:8888/kblu/byNsId'    -d'{"nsId": "uniprot:P31749"}' -H "$PTYPE" | wc
+curl -s -XPOST 'http://localhost:8888/kblu/synonyms'  -d'{"nsId": "uniprot:P31749"}' -H "$PTYPE" | wc
+curl -s -XPOST 'http://localhost:8888/kblu/byNsAndId' -d'{"ns": "uniprot", "id": "P31749"}' -H "$PTYPE" | wc
+curl -s -XPOST 'http://localhost:8888/kblu/byId'      -d'{"id": "P31749"}'           -H "$PTYPE" | wc
+curl -s -XPOST 'http://localhost:8888/kblu/byNsId'    -d'{"nsId": "pubchem:5870"}'   -H "$PTYPE" | wc
+curl -s -XPOST 'http://localhost:8888/kblu/synonyms'  -d'{"nsId": "pubchem:5870"}'   -H "$PTYPE" | wc
+curl -s -XPOST 'http://localhost:8888/kblu/byNsAndId' -d'{"ns": "pubchem", "id": "5870"}' -H "$PTYPE" | wc
+curl -s -XPOST 'http://localhost:8888/kblu/byId'     -d'{"id": "5870"}'        -H "$PTYPE" | wc
 curl -s -XPOST 'http://localhost:8888/kblu/byText'   -d'{"text": "BLOOD"}'     -H "$PTYPE" | wc
 curl -s -XPOST 'http://localhost:8888/kblu/lookup'   -d'{"text": "BLOOD"}'     -H "$PTYPE" | wc
 curl -s -XPOST 'http://localhost:8888/kblu/byText'   -d'{"text": "brown fat"}' -H "$PTYPE" | wc

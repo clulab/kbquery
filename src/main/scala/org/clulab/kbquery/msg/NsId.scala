@@ -15,3 +15,8 @@ case class NsAndId (
 case class NsIds (
   val nsIds: List[NsId]                     // convey the set as a List for convenience
 ) extends Message
+
+/** Represent a single ID string. */
+case class Id (
+  val id: String
+) extends Message

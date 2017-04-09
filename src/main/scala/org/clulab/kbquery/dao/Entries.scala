@@ -8,7 +8,7 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB entries table.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Refactor variant generator to file loader.
+  *   Last Modified: Add findById query.
   */
 class Entries (tag: Tag) extends Table[EntryType](tag, "ENTRIES") {
 
@@ -58,6 +58,11 @@ object Entries extends TableQuery(new Entries(_)) {
   /** Convert a sequence of synonym strings into a Synonyms object. */
   def toSynonyms (syns: Seq[String]): Synonyms = Synonyms(syns.toSet.toList)
 
+
+  /** Query to find records by ID string alone. */
+  def findById (id:String): Query[Entries, EntryType, Seq] = {
+    Entries.filter(kbe => (kbe.id === id))
+  }
 
   /** Query to find records by namespace and ID strings. */
   def findByNsAndId (ns:String, id:String): Query[Entries, EntryType, Seq] = {

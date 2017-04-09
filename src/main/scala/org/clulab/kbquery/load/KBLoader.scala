@@ -12,7 +12,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Add batching. Improve messages, fix counts, cleaner flow.
+  *   Last Modified: Redo using indices, varchars, and autochecking surround wrappers.
   */
 object KBLoader extends App with LazyLogging {
 
@@ -46,23 +46,48 @@ object KBLoader extends App with LazyLogging {
 
   /** Drop the tables if they exist. */
   def dropTables: Unit = {
-    sql"SET FOREIGN_KEY_CHECKS = 0".execute.apply()
+    checksOFF                               // turn off slow DB validation
     sql"DROP TABLE IF EXISTS `TKEYS`".execute.apply()
     sql"DROP TABLE IF EXISTS `ENTRIES`".execute.apply()
     sql"DROP TABLE IF EXISTS `SOURCES`".execute.apply()
-    sql"SET FOREIGN_KEY_CHECKS = 1".execute.apply()
+    commitChanges                           // commit the table drop
+  }
+
+  /** Turn off DB checks during inserts to prevent massive slowdown. */
+  def checksOFF: Unit = {
+    sql"SET FOREIGN_KEY_CHECKS=0".execute.apply()
+    sql"SET UNIQUE_CHECKS=0".execute.apply()
+    sql"SET AUTOCOMMIT=0".execute.apply()
+  }
+
+  /** Turn off DB checks during inserts to prevent massive slowdown. */
+  def checksON: Unit = {
+    sql"SET FOREIGN_KEY_CHECKS=1".execute.apply()
+    sql"SET UNIQUE_CHECKS=1".execute.apply()
+    sql"SET AUTOCOMMIT=1".execute.apply()
+  }
+
+  /** Commit any previous changes while autocommit was off. */
+  def commitChanges: Unit = {
+    sql"COMMIT".execute.apply()             // commit any previous changes
+  }
+
+  /** Commit any previous changes while autocommit was off, restore normal DB validation. */
+  def commitChangesAndRestoreChecks: Unit = {
+    commitChanges                           // commit any previous changes
+    checksON                                // and restore normal checking
   }
 
   /** Create the DB tables. */
   def createTables: Unit = {
-    sql"SET FOREIGN_KEY_CHECKS = 0".execute.apply()
+    checksOFF                               // turn off slow DB validation
 
     sql"""
 CREATE TABLE `SOURCES` (
   `uid` int(11) NOT NULL,
-  `namespace` text NOT NULL,
-  `filename` text NOT NULL,
-  `label` text NOT NULL,
+  `namespace` varchar(20) NOT NULL,
+  `filename` varchar(60) NOT NULL,
+  `label` varchar(40) NOT NULL,
   PRIMARY KEY (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
     """.execute.apply()
@@ -70,41 +95,51 @@ CREATE TABLE `SOURCES` (
     sql"""
 CREATE TABLE `ENTRIES` (
   `uid` INT NOT NULL AUTO_INCREMENT,
-  `text` text NOT NULL,
-  `namespace` text NOT NULL,
-  `id` text  NOT NULL,
-  `label` text  NOT NULL,
+  `text` varchar(80) NOT NULL,
+  `namespace` varchar(40) NOT NULL,
+  `id` varchar(80)  NOT NULL,
+  `label` varchar(40)  NOT NULL,
   `is_gene_name` TINYINT(1) NOT NULL,
   `is_short_name` TINYINT(1) NOT NULL,
-  `species` text NOT NULL,
+  `species` varchar(256) NOT NULL,
   `priority` INT NOT NULL,
   `source_ndx` INT NOT NULL,
   PRIMARY KEY (uid),
+  INDEX `text_ndx` (`text`),
+  INDEX `namespace_ndx` (`namespace`),
+  INDEX `id_ndx` (`id`),
+  INDEX `label_ndx` (`label`),
   KEY `SRC_FK`(`source_ndx`),
   CONSTRAINT SRC_FK FOREIGN KEY(`source_ndx`) REFERENCES `SOURCES`(`uid`)
     ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
     """.execute.apply()
 
-    sql"SET FOREIGN_KEY_CHECKS = 1".execute.apply()
+    commitChanges                           // commit table creations
   }
+
 
   /** Load the Sources table with the information extracted from the configuration file. */
   def loadSources (implicit session:DBSession = AutoSession): Unit = {
+    checksOFF                               // turn off slow DB validation
     sourcesConfiguration.sources.foreach { src =>
       sql"""insert into Sources values (
               ${src.id}, ${src.namespace}, ${src.filename}, ${src.label})""".update.apply()
     }
+    commitChanges                           // commit insertions
   }
+
 
   /** Use the Sources configuration to find and load the configured KB files. */
   def loadFiles: Int = {
     var total = 0
+    checksOFF                               // turn off slow DB validation
     sourcesConfiguration.sources.foreach { kbInfo =>
       EntryBatcher.resetFileCount
       val kbTypeCode = KBFileLoader.loadFile(kbInfo)
       val fileCnt = EntryBatcher.resetFileCount
       total = EntryBatcher.flushBatch
+      commitChanges                         // commit insertions for last KB
       if (Verbose) {
         val filename = kbInfo.filename
         val kbType = if (kbTypeCode == MultiLabel) "multi-source" else "single-source"
@@ -112,7 +147,8 @@ CREATE TABLE `ENTRIES` (
           s"Finished loading ${fileCnt} entries from ${kbType} KB file '$filename'. Total loaded: $total")
       }
     }
-    total                               // return count of total entries loaded
+    commitChangesAndRestoreChecks           // commit changes and restore DB validation
+    total                                   // return count of total entries loaded
   }
 
   /** Load the given sequence of entries to the database. This may happen
@@ -130,7 +166,8 @@ CREATE TABLE `ENTRIES` (
       entries to the database. */
   def writeBatch (entries: Seq[KBEntry]): Int = {
     val batchData: Seq[Seq[Any]] = entries.map(_.toSeq)
-    sql"insert into Entries values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)".batch(batchData: _*).apply()
+    sql"insert into Entries values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)".batch(batchData: _*).apply()
+    commitChanges                           // commit insertions
     return entries.size
   }
 
@@ -141,7 +178,8 @@ CREATE TABLE `ENTRIES` (
   dropTables
   createTables
   loadSources                               // load the KB meta info table from config
-  val entCnt = loadFiles                    // the major work: load all KB data files
+  var entCnt = 0
+  entCnt = loadFiles                        // the major work: load all KB data files
   // shutdown                               // close down/cleanup the loader
   if (Verbose)
     logger.info(s"Finished loading all configured KB files. Total entities loaded: $entCnt")

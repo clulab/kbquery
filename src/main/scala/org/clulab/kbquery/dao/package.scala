@@ -10,4 +10,8 @@ package object dao {
   type SourceType = Tuple4[Int, String, String, String]
   // type SourceRepType = Rep[SourceType]
 
+  /** Type declaration for a row in the Slick-based Keys table. */
+  type KeyType = Tuple2[String, Int]
+  // type KeyRepType = Rep[KeyType]
+
 }

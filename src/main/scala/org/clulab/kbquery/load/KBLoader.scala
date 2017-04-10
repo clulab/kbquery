@@ -12,7 +12,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Redo using indices, varchars, and autochecking surround wrappers.
+  *   Last Modified: Update for keys table.
   */
 object KBLoader extends App with LazyLogging {
 
@@ -115,6 +115,16 @@ CREATE TABLE `ENTRIES` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
     """.execute.apply()
 
+    sql"""
+CREATE TABLE `TKEYS` (
+  `text` varchar(80) NOT NULL,
+  `entry_ndx` INT NOT NULL,
+  KEY `ENT_FK`(`entry_ndx`),
+  CONSTRAINT ENT_FK FOREIGN KEY(`entry_ndx`) REFERENCES `ENTRIES`(`uid`)
+    ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+    """.execute.apply()
+
     commitChanges                           // commit table creations
   }
 
@@ -155,8 +165,25 @@ CREATE TABLE `ENTRIES` (
     * immediately or entries may be batched for later writing, determined by
     * the batch size configuration parameter.
     */
-  def loadEntries (entries: Seq[KBEntry]): Unit = {
-    val latestCount = EntryBatcher.addBatch(entries)
+  def loadEntries (entries: Seq[KBEntry]): Unit = EntryBatcher.addBatch(entries)
+
+
+  /** Stream over the entries, transform each entry.text into one or more keys and
+      then store the keys into the Keys table. */
+  def fillKeysTable: Unit = {
+    checksOFF                               // turn off slow DB validation
+    // TODO: IMPLEMENT LATER
+    sql"insert into TKEYS (entry_ndx, text) select uid, text from ENTRIES".execute.apply()
+    commitChangesAndRestoreChecks           // commit changes and restore DB validation
+    // val texts = Entries.map(entry => (entry.uid, entry.text)).result
+    // val textsStream: DatabasePublisher[Tuple2[Int,String]] =
+    //   theDB.stream(texts.withStatementParameters(fetchSize = BatchSize))
+    // val allKeys: ListBuffer[KeyType] = new ListBuffer[KeyType]()
+    // val keyMaker = textsStream.foreach { case(entryFK, text) =>
+    //   KBFileLoader.generateKeys(text).foreach { key =>
+    //     allKeys += new KeyType(key, entryFK)
+    //   }
+    // }
   }
 
   /** Execute SQL command to cleanly shutdown the DB. Only useful for embedded DBs. */
@@ -166,6 +193,7 @@ CREATE TABLE `ENTRIES` (
       entries to the database. */
   def writeBatch (entries: Seq[KBEntry]): Int = {
     val batchData: Seq[Seq[Any]] = entries.map(_.toSeq)
+    checksOFF                               // turn off slow DB validation
     sql"insert into Entries values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)".batch(batchData: _*).apply()
     commitChanges                           // commit insertions
     return entries.size
@@ -180,6 +208,7 @@ CREATE TABLE `ENTRIES` (
   loadSources                               // load the KB meta info table from config
   var entCnt = 0
   entCnt = loadFiles                        // the major work: load all KB data files
+  fillKeysTable
   // shutdown                               // close down/cleanup the loader
   if (Verbose)
     logger.info(s"Finished loading all configured KB files. Total entities loaded: $entCnt")

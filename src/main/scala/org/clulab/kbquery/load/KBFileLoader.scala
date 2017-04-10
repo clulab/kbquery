@@ -14,7 +14,7 @@ import org.clulab.kbquery.msg.Species._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Conditional truncation warnings, move finished messages.
+  *   Last Modified: Update for keys table.
   */
 object KBFileLoader extends LazyLogging {
 
@@ -53,8 +53,7 @@ object KBFileLoader extends LazyLogging {
     val source: Option[Source] = sourceFromFilename(kbInfo.filename)
     if (source.isDefined) {
       source.get.getLines.map(tsvRowToFields(_)).filter(validateMultiFields(_)).foreach { fields =>
-        val entries = generateEntries(entryFromMultiFields(kbInfo, fields))
-        if (entries.nonEmpty)  KBLoader.loadEntries(entries)
+        KBLoader.loadEntries(Seq(entryFromMultiFields(kbInfo, fields)))
       }
       source.get.close
     }
@@ -69,8 +68,7 @@ object KBFileLoader extends LazyLogging {
     val source: Option[Source] = sourceFromFilename(kbInfo.filename)
     if (source.isDefined) {
       source.get.getLines.map(tsvRowToFields(_)).filter(validateUniFields(_)).foreach { fields =>
-        val entries = generateEntries(entryFromUniFields(kbInfo, fields))
-        if (entries.nonEmpty)  KBLoader.loadEntries(entries)
+        KBLoader.loadEntries(Seq(entryFromUniFields(kbInfo, fields)))
       }
       source.get.close
     }
@@ -108,18 +106,9 @@ object KBFileLoader extends LazyLogging {
     KBEntry(0, text, namespace, id, label, false, false, species, DefaultPriority, kbInfo.id)
   }
 
-  /** Generate one or more KB keys by transforming the text of the given entry object. */
-  private def generateEntries (kbent: KBEntry): Seq[KBEntry] = {
-    val textSet = applyAllTransforms(DefaultKeyTransforms, kbent.text).toSet
-    val entries = textSet.map { key => generateVariant(key, kbent) }
-    entries.toSeq                           // return possibly empty sequence of entries
-  }
-
-  /** Return a new entry record varying from the given KB entry object by
-      substitution of the given new text field. */
-  def generateVariant (newText: String, kbe: KBEntry): KBEntry = {
-    KBEntry(0, newText, kbe.namespace, kbe.id, kbe.label, kbe.isGeneName,
-            kbe.isShortName, kbe.species, kbe.priority, kbe.sourceNdx)
+  /** Generate a set of key strings from the text field of the given KB entry object. */
+  def generateKeys (text: String): Set[String] = {
+    applyAllTransforms(DefaultKeyTransforms, text).toSet
   }
 
   /** Return a Scala Source object created from the given filename string and

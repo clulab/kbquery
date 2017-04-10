@@ -31,3 +31,14 @@ CREATE TABLE `ENTRIES` (
   CONSTRAINT SRC_FK FOREIGN KEY(`source_ndx`) REFERENCES `SOURCES`(`uid`)
     ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+
+-- A table of alternate keys which reference corresponding entities in the entries table
+--
+CREATE TABLE `TKEYS` (
+  `text` varchar(80) NOT NULL,
+  `entry_ndx` INT NOT NULL,
+  KEY `ENT_FK`(`entry_ndx`),
+  CONSTRAINT ENT_FK FOREIGN KEY(`entry_ndx`) REFERENCES `ENTRIES`(`uid`)
+    ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

@@ -13,7 +13,7 @@ import org.clulab.kbquery.dao._
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add byId lookup.
+  *   Last Modified: Update for keys table.
   */
 object DBManager {
 
@@ -56,13 +56,19 @@ object DBManager {
     return Await.result(data, Duration.Inf)
   }
 
-  /** Count all records in the Entries KB. */
+  /** Count all records in the Entries table. */
   def countEntries: Map[String, Int] = {
     val count = theDB.run(Entries.length.result.map(c => Map[String, Int]("count" -> c)))
     return Await.result(count, Duration.Inf)
   }
 
-  /** Count all records in the Sources KB. */
+  /** Count all records in the Keys table. */
+  def countKeys: Map[String, Int] = {
+    val count = theDB.run(Keys.length.result.map(c => Map[String, Int]("count" -> c)))
+    return Await.result(count, Duration.Inf)
+  }
+
+  /** Count all records in the Sources table. */
   def countSources: Map[String, Int] = {
     val count = theDB.run(Sources.length.result.map(c => Map[String, Int]("count" -> c)))
     return Await.result(count, Duration.Inf)
@@ -71,6 +77,12 @@ object DBManager {
   /** Return all bioentity entries from the KB. WARNING: HUGE!.*/
   def dumpEntries: KBEntries = {
     val data = theDB.run(Entries.result.map(rows => Entries.toKBEntries(rows)))
+    return Await.result(data, Duration.Inf)
+  }
+
+  /** Return all permuted text keys from the KB. WARNING: HUGE!.*/
+  def dumpKeys: KBKeys = {
+    val data = theDB.run(Keys.result.map(rows => Keys.toKBKeys(rows)))
     return Await.result(data, Duration.Inf)
   }
 

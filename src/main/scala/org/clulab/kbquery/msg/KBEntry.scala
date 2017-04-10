@@ -75,3 +75,22 @@ case class KBSource (
 case class KBSources (
   val sources: List[KBSource]
 ) extends Message
+
+
+/**
+  * A class holding a transformed text string (key) representing a varient
+  * lexical form for an entity in the Entries table.
+  */
+case class KBKey (
+
+  /** A text string formed by perturbing the text field of the corresponding Entries text field. */
+  val text: String,
+
+  /** A foreign key field pointing to the main entry that this record is a key for. */
+  val entryNdx: Int
+)
+
+/** A list of Key records. */
+case class KBKeys (
+  val sources: List[KBKey]
+) extends Message

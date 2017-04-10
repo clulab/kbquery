@@ -12,7 +12,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Update for keys table.
+  *   Last Modified: Add index to and fill keys table.
   */
 object KBLoader extends App with LazyLogging {
 
@@ -119,6 +119,7 @@ CREATE TABLE `ENTRIES` (
 CREATE TABLE `TKEYS` (
   `text` varchar(80) NOT NULL,
   `entry_ndx` INT NOT NULL,
+  INDEX `tkey_ndx` (`text`),
   KEY `ENT_FK`(`entry_ndx`),
   CONSTRAINT ENT_FK FOREIGN KEY(`entry_ndx`) REFERENCES `ENTRIES`(`uid`)
     ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -172,18 +173,16 @@ CREATE TABLE `TKEYS` (
       then store the keys into the Keys table. */
   def fillKeysTable: Unit = {
     checksOFF                               // turn off slow DB validation
-    // TODO: IMPLEMENT LATER
-    sql"insert into TKEYS (entry_ndx, text) select uid, text from ENTRIES".execute.apply()
+    // The following SQL will work IFF the key transform you want is IDENTITY:
+    // sql"insert into TKEYS (entry_ndx, text) select uid, text from ENTRIES".execute.apply()
+    sql"select uid, text from ENTRIES".foreach { rs =>
+      val uid = rs.int("uid")
+      val text = rs.string("text")
+      KBFileLoader.generateKeys(text).foreach { tkey =>
+        sql"""insert into TKEYS values(${tkey}, ${uid})""".execute.apply()
+      }
+    }
     commitChangesAndRestoreChecks           // commit changes and restore DB validation
-    // val texts = Entries.map(entry => (entry.uid, entry.text)).result
-    // val textsStream: DatabasePublisher[Tuple2[Int,String]] =
-    //   theDB.stream(texts.withStatementParameters(fetchSize = BatchSize))
-    // val allKeys: ListBuffer[KeyType] = new ListBuffer[KeyType]()
-    // val keyMaker = textsStream.foreach { case(entryFK, text) =>
-    //   KBFileLoader.generateKeys(text).foreach { key =>
-    //     allKeys += new KeyType(key, entryFK)
-    //   }
-    // }
   }
 
   /** Execute SQL command to cleanly shutdown the DB. Only useful for embedded DBs. */

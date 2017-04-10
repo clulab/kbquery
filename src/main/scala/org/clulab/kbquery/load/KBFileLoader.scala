@@ -6,7 +6,6 @@ import java.util.zip.GZIPInputStream
 import scala.io.Source
 import com.typesafe.scalalogging.LazyLogging
 
-import org.clulab.kbquery.KBKeyTransforms._
 import org.clulab.kbquery.dao._
 import org.clulab.kbquery.msg._
 import org.clulab.kbquery.msg.Species._
@@ -14,7 +13,7 @@ import org.clulab.kbquery.msg.Species._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Update for keys table.
+  *   Last Modified: Move text generator back to loader.
   */
 object KBFileLoader extends LazyLogging {
 
@@ -104,11 +103,6 @@ object KBFileLoader extends LazyLogging {
     val namespace = if ((fields.size > 3) && fields(3).nonEmpty) fields(3) else kbInfo.namespace
     val label = shortLabel.getOrElse(kbInfo.label, "X")
     KBEntry(0, text, namespace, id, label, false, false, species, DefaultPriority, kbInfo.id)
-  }
-
-  /** Generate a set of key strings from the text field of the given KB entry object. */
-  def generateKeys (text: String): Set[String] = {
-    applyAllTransforms(DefaultKeyTransforms, text).toSet
   }
 
   /** Return a Scala Source object created from the given filename string and

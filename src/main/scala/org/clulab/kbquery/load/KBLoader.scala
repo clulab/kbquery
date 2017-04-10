@@ -7,12 +7,14 @@ import com.typesafe.scalalogging.LazyLogging
 import scalikejdbc._
 import scalikejdbc.config._
 
+import org.clulab.kbquery.KBKeyTransforms._
+import org.clulab.kbquery.dao._
 import org.clulab.kbquery.msg._
 
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Add index to and fill keys table.
+  *   Last Modified: Batch load keys for speedup.
   */
 object KBLoader extends App with LazyLogging {
 
@@ -172,17 +174,19 @@ CREATE TABLE `TKEYS` (
   /** Stream over the entries, transform each entry.text into one or more keys and
       then store the keys into the Keys table. */
   def fillKeysTable: Unit = {
+    if (Verbose)  logger.info("Filling Keys table....")
     checksOFF                               // turn off slow DB validation
-    // The following SQL will work IFF the key transform you want is IDENTITY:
-    // sql"insert into TKEYS (entry_ndx, text) select uid, text from ENTRIES".execute.apply()
-    sql"select uid, text from ENTRIES".foreach { rs =>
-      val uid = rs.int("uid")
-      val text = rs.string("text")
-      KBFileLoader.generateKeys(text).foreach { tkey =>
-        sql"""insert into TKEYS values(${tkey}, ${uid})""".execute.apply()
-      }
+    sql"select uid, text from ENTRIES".fetchSize(BatchSize).foreach { rs =>
+      KeyBatcher.addBatch(generateKeyRows(rs.int("uid"), rs.string("text")))
     }
+    KeyBatcher.flushBatch
     commitChangesAndRestoreChecks           // commit changes and restore DB validation
+  }
+
+  /** Return a sequence of key row objects created from the given UID and text string. */
+  def generateKeyRows (uid: Int, text: String): Seq[KBKey] = {
+    val textSet = applyAllTransforms(DefaultKeyTransforms, text).toSet.toSeq
+    textSet.map { tkey => KBKey(tkey, uid) }
   }
 
   /** Execute SQL command to cleanly shutdown the DB. Only useful for embedded DBs. */
@@ -196,6 +200,16 @@ CREATE TABLE `TKEYS` (
     sql"insert into Entries values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)".batch(batchData: _*).apply()
     commitChanges                           // commit insertions
     return entries.size
+  }
+
+  /** Called by the batching system to immediately write the given batch of
+      keys to the database. */
+  def writeKeyBatch (keyRows: Seq[KBKey]): Int = {
+    val batchData: Seq[Seq[Any]] = keyRows.map(_.toSeq)
+    checksOFF                               // turn off slow DB validation
+    sql"insert into TKEYS values(?, ?)".batch(batchData: _*).apply()
+    commitChanges                           // commit insertions
+    return keyRows.size
   }
 
 

@@ -5,7 +5,7 @@ import Species._
 /**
   * Main class representing a single knowledge base entry.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add method to convert KBEntry to a sequence of its values.
+  *   Last Modified: Add method to convert KBKey to a sequence of its values.
   */
 case class KBEntry (
 
@@ -88,7 +88,11 @@ case class KBKey (
 
   /** A foreign key field pointing to the main entry that this record is a key for. */
   val entryNdx: Int
-)
+) extends Message {
+
+  /** Convert this KBKey to a sequence of its member values. */
+  def toSeq: Seq[Any] = Seq(text, entryNdx)
+}
 
 /** A list of Key records. */
 case class KBKeys (

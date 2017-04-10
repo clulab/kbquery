@@ -38,6 +38,7 @@ CREATE TABLE `ENTRIES` (
 CREATE TABLE `TKEYS` (
   `text` varchar(80) NOT NULL,
   `entry_ndx` INT NOT NULL,
+  INDEX `tkey_ndx` (`text`),
   KEY `ENT_FK`(`entry_ndx`),
   CONSTRAINT ENT_FK FOREIGN KEY(`entry_ndx`) REFERENCES `ENTRIES`(`uid`)
     ON DELETE NO ACTION ON UPDATE NO ACTION

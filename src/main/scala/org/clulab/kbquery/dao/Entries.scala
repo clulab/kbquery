@@ -8,7 +8,7 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB entries table.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add findById query.
+  *   Last Modified: Update text queries to use joins on Keys/Entries tables.
   */
 class Entries (tag: Tag) extends Table[EntryType](tag, "ENTRIES") {
 
@@ -71,12 +71,18 @@ object Entries extends TableQuery(new Entries(_)) {
 
   /** Query to find records exactly matching the given text string. */
   def findByText (text:String): Query[Entries, EntryType, Seq] = {
-    Entries.filter(kbe => kbe.text === text)
+    for {
+      k <- Keys if (k.text === text)
+      e <- k.entry
+    } yield e
   }
 
   /** Query to find records with text in the given set of text strings. */
   def findByTextSet (textSet: Set[String]): Query[Entries, EntryType, Seq] = {
-    Entries.filter(kbe => kbe.text inSet textSet)
+    for {
+      k <- Keys if (k.text inSet textSet)
+      e <- k.entry
+    } yield e
   }
 
   /** Query to find text field synonyms by namespace and ID strings. */

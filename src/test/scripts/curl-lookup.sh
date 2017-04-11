@@ -46,10 +46,10 @@ curl -s 'http://localhost:8888/kblu/byText?text=FOXP3' | wc
 curl -s 'http://localhost:8888/kblu/lookup?text=FOXP3' | wc
 curl -s 'http://localhost:8888/kblu/byText?text=foxP3' | wc
 curl -s 'http://localhost:8888/kblu/lookup?text=foxP3' | wc
-curl -s 'http://localhost:8888/kblu/byText?text=MEK15' | wc
-curl -s 'http://localhost:8888/kblu/lookup?text=MEK15' | wc
-curl -s 'http://localhost:8888/kblu/byText?text=MEK+15' | wc
-curl -s 'http://localhost:8888/kblu/lookup?text=MEK+15' | wc
+curl -s 'http://localhost:8888/kblu/byText?text=MEK5' | wc
+curl -s 'http://localhost:8888/kblu/lookup?text=MEK5' | wc
+curl -s 'http://localhost:8888/kblu/byText?text=MEK+5' | wc
+curl -s 'http://localhost:8888/kblu/lookup?text=MEK+5' | wc
 
 curl -s 'http://localhost:8888/kblu/byText?text=apoptosis' | wc
 curl -s 'http://localhost:8888/kblu/lookup?text=apoptosis' | wc
@@ -132,10 +132,10 @@ curl -s -XPOST 'http://localhost:8888/kblu/byText' -d'{"text": "FOXP3"}' -H "$PT
 curl -s -XPOST 'http://localhost:8888/kblu/lookup' -d'{"text": "FOXP3"}' -H "$PTYPE" | wc
 curl -s -XPOST 'http://localhost:8888/kblu/byText' -d'{"text": "foxP3"}' -H "$PTYPE" | wc
 curl -s -XPOST 'http://localhost:8888/kblu/lookup' -d'{"text": "foxP3"}' -H "$PTYPE" | wc
-curl -s -XPOST 'http://localhost:8888/kblu/byText' -d'{"text": "MEK15"}' -H "$PTYPE" | wc
-curl -s -XPOST 'http://localhost:8888/kblu/lookup' -d'{"text": "MEK15"}' -H "$PTYPE" | wc
-curl -s -XPOST 'http://localhost:8888/kblu/byText' -d'{"text": "MEK 15"}' -H "$PTYPE" | wc
-curl -s -XPOST 'http://localhost:8888/kblu/lookup' -d'{"text": "MEK 15"}' -H "$PTYPE" | wc
+curl -s -XPOST 'http://localhost:8888/kblu/byText' -d'{"text": "MEK5"}' -H "$PTYPE" | wc
+curl -s -XPOST 'http://localhost:8888/kblu/lookup' -d'{"text": "MEK5"}' -H "$PTYPE" | wc
+curl -s -XPOST 'http://localhost:8888/kblu/byText' -d'{"text": "MEK 5"}' -H "$PTYPE" | wc
+curl -s -XPOST 'http://localhost:8888/kblu/lookup' -d'{"text": "MEK 5"}' -H "$PTYPE" | wc
 
 curl -s -XPOST 'http://localhost:8888/kblu/byText' -d'{"text": "apoptosis"}' -H "$PTYPE" | wc
 curl -s -XPOST 'http://localhost:8888/kblu/lookup' -d'{"text": "apoptosis"}' -H "$PTYPE" | wc

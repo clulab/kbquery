@@ -91,7 +91,7 @@
             <tr>
               <td><code>/kblu/lookup</code></td>
               <td><code>POST</code></td>
-              <td><code>{"text":"a string"}</code></td>
+              <td><code>{"text": "a string"}</code></td>
               <td>Transform the given text string in various ways and lookup the resulting
                 strings in the <code>Entries</code> database table. Return all records
                 whose <code>text</code> field matches any of the transformed strings.
@@ -108,7 +108,7 @@
             <tr>
               <td><code>/kblu/byText</code></td>
               <td><code>POST</code></td>
-              <td><code>{"text":"a+string"}</code></td>
+              <td><code>{"text": "a string"}</code></td>
               <td>Return records from the <code>Entries</code> database table whose
                   <code>text</code> field exactly matches the given text argument.
               </td>
@@ -116,7 +116,7 @@
             <tr>
               <td><code>/kblu/byNsId</code></td>
               <td><code>GET</code></td>
-              <td><code>?nsId=namespace:id</code></td>
+              <td><code>?nsId=aNamespace:anID</code></td>
               <td>Lookup the given namespace:id string and return all entries with the
                 given namespace and ID.
               </td>
@@ -124,7 +124,7 @@
             <tr>
               <td><code>/kblu/byNsId</code></td>
               <td><code>POST</code></td>
-              <td><code>{"nsId":"namespace:id"}</code></td>
+              <td><code>{"nsId": "aNamespace:anID"}</code></td>
               <td>Lookup the given namespace:id string and return all entries with the
                 given namespace and ID.
               </td>
@@ -132,21 +132,35 @@
             <tr>
               <td><code>/kblu/byNsAndId</code></td>
               <td><code>GET</code></td>
-              <td><code>?ns=namespace&id=id</code></td>
+              <td><code>?ns=aNamespace&id=anID</code></td>
               <td>Lookup the given namespace and ID strings and return all entries with
                   the given namespace and ID.</td>
             </tr>
             <tr>
               <td><code>/kblu/byNsAndId</code></td>
               <td><code>POST</code></td>
-              <td><code>{"ns":"namespace", "id":"id"}</code></td>
+              <td><code>{"ns": "aNamespace", "id": "anID"}</code></td>
               <td>Lookup the given namespace and ID strings and return all entries with
                   the given namespace and ID.</td>
             </tr>
             <tr>
+              <td><code>/kblu/byId</code></td>
+              <td><code>GET</code></td>
+              <td><code>?id=anID</code></td>
+              <td>Lookup the given ID string and return all entries with
+                  the given ID, in any namespace.</td>
+            </tr>
+            <tr>
+              <td><code>/kblu/byId</code></td>
+              <td><code>POST</code></td>
+              <td><code>{"id": "anID"}</code></td>
+              <td>Lookup the given ID string and return all entries with
+                  the given ID, in any namespace.</td>
+            </tr>
+            <tr>
               <td><code>/kblu/synonyms</code></td>
               <td><code>GET</code></td>
-              <td><code>?nsId=namespace:id</code></td>
+              <td><code>?nsId=aNamespace:anID</code></td>
               <td>Lookup the given namespace:id string and return just the text strings from
                   all entries with the given namespace and ID.
               </td>
@@ -154,7 +168,7 @@
             <tr>
               <td><code>/kblu/synonyms</code></td>
               <td><code>POST</code></td>
-              <td><code>{"nsId":"namespace:id"}</code></td>
+              <td><code>{"nsId": "aNamespace:anID"}</code></td>
               <td>Lookup the given namespace:id string and return just the text strings from
                   all entries with the given namespace and ID.
               </td>
@@ -192,6 +206,16 @@
               <td>
                 Return the current number of records in the <code>Entries</code> table.
                 This count is how many KB entity records have been loaded into the database.
+              </td>
+            </tr>
+            <tr>
+              <td><code>/countKeys</code></td>
+              <td><code>GET | POST</code></td>
+              <td></td>
+              <td>
+                Return the current number of records in the <code>TKeys</code> table.
+                This count is how many KB text key records (each pointing to a corresponding
+                Entries record) have been loaded into the database.
               </td>
             </tr>
             <tr>

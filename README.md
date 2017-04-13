@@ -52,8 +52,8 @@ Usage: kbquery [--host <hostname>]  [--port <port#>]
 ## Database
 
 The KBQuery Server application uses a local [MySQL](http://mysql.org/) server
-as the database and [Slick](http://slick.lightbend.com/) as the database
-access library.
+as the database and [Slick](http://slick.lightbend.com/) and
+[ScalikeJDBC](http://scalikejdbc.org/) as the database access libraries.
 
 
 ### Building a new Database
@@ -67,16 +67,30 @@ class; the `KBLoader`. To run the `KBLoader` class from the command line with `s
 ```
 
 By default, the `KBLoader` program expects its `Bioresources` input KB files to
-be located in a subdirectory of the startup directory named `KBs`. The name of
+be located in a subdirectory of the startup directory named `KBs`. (__Note:__ the
+subdirectory `KBs` can simply be a symbolic link to the `Bioresources` directory
+`bioresources/src/main/resources/org/clulab/reach/kb`). The name of
 the created database is, by default, `kbqdb`. The `KBLoader` and database
- parameters can be changed in the `application.conf` configuration file.
+parameters can be changed in the `application.conf` configuration file.
 
-**NOTE:** If you choose to re-run KBLoader to reload the database, all
-existing tables (**with their data**) will be dropped.
+**NOTE:** If you choose to re-run KBLoader to reload the database, **all
+existing tables and contents will be deleted**.
+
+Once the MySQL database has been loaded, it can be dumped and reloaded very
+quickly using the MySQL Dump utility. A utility shell script to dump the
+`kbqdb` database is located in the `kbquery/src/main/resources/sql` subdirectory.
+This directory also contains an SQL script to initially create the `kbqdb`
+database and its dedicated user.
+
+**NOTE:** As, configured, the project database user has no real security and this
+server should not be exposed on a public port or in an unsafe environment.
+
 
 ## Licenses
 
-KBQuery Server is licensed under the Apache License Version 2.0.
+KBQuery Server is licensed under the Apache License, Version 2.0.
+
+ScalikeJDBC is also licensed under the Apache License, Version 2.0.
 
 A copy of the [Slick license](https://github.com/slick/slick/blob/master/LICENSE.txt)
 is provided in the LICENSES subdirectory.

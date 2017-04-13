@@ -69,21 +69,25 @@ class; the `KBLoader`. To run the `KBLoader` class from the command line with `s
 By default, the `KBLoader` program expects its `Bioresources` input KB files to
 be located in a subdirectory of the startup directory named `KBs`. (__Note:__ the
 subdirectory `KBs` can simply be a symbolic link to the `Bioresources` directory
-`bioresources/src/main/resources/org/clulab/reach/kb`). The name of
-the created database is, by default, `kbqdb`. The `KBLoader` and database
-parameters can be changed in the `application.conf` configuration file.
+`bioresources/src/main/resources/org/clulab/reach/kb`).
 
-**NOTE:** If you choose to re-run KBLoader to reload the database, **all
+The name of the created database is, by default, `kbqdb`. The `KBLoader` and
+database parameters can be changed in the `application.conf` configuration file.
+
+**NOTE:** If you choose to re-run `KBLoader` to reload the database, **all
 existing tables and contents will be deleted**.
 
-Once the MySQL database has been loaded, it can be dumped and reloaded very
-quickly using the MySQL Dump utility. A utility shell script to dump the
-`kbqdb` database is located in the `kbquery/src/main/resources/sql` subdirectory.
-This directory also contains an SQL script to initially create the `kbqdb`
-database and its dedicated user.
 
-**NOTE:** As, configured, the project database user has no real security and this
-server should not be exposed on a public port or in an unsafe environment.
+### Saving the Database
+
+Once the MySQL database has been loaded, it can be backedup, moved to another
+MySQL server, and/or reloaded very quickly using the MySQL Dump utility.
+A utility shell script to dump the `kbqdb` database is located in the
+`kbquery/src/main/resources/sql` subdirectory. This directory also contains an
+SQL script to initially create the `kbqdb` database and its dedicated user.
+
+**NOTE:** As, configured, the project's database user has no real security and
+**this server should not be exposed on a public port or in an unsafe environment**.
 
 
 ## Licenses

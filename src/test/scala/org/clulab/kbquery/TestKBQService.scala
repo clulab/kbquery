@@ -19,7 +19,7 @@ import org.clulab.kbquery.msg._
 /**
   * Unit tests of the KBQ service class.
   *   Written by: Tom Hicks. 3/26/2017.
-  *   Last Modified: Update all tests to use real data, Akka-http-testkit syntax.
+  *   Last Modified: Add tests for byID methods.
   */
 class TestKBQService extends WordSpec
     with Matchers
@@ -94,6 +94,22 @@ class TestKBQService extends WordSpec
       }
     }
 
+    "lookup by ID only" in {
+      Get("/kblu/byId?id=Q15942") ~> route ~> check {
+        status should equal(StatusCodes.OK)
+        val resp = responseAs[KBEntries]
+        (resp.entries) should not be (empty)
+          (resp.entries.size) should be (6)
+        val entry = resp.entries(0)
+          ((List[String](entry.text)) should contain oneOf ("ZYX", "Zyxin", "Zyxin-2"))
+        (entry.namespace) should equal ("uniprot")
+          (entry.id) should equal ("Q15942")
+        (entry.label) should equal ("G")
+          (entry.isGeneName) should be (false)
+        (entry.isShortName) should be (false)
+      }
+    }
+
     "lookup synonyms by nsId" in {
       Get("/kblu/synonyms?nsId=uniprot:Q13131") ~> route ~> check {
         status should equal(StatusCodes.OK)
@@ -150,6 +166,25 @@ class TestKBQService extends WordSpec
       Post("/kblu/byNsAndId",
         HttpEntity(ContentTypes.`application/json`,
           """{ "ns": "uniprot", "id": "Q15942" }""")) ~> route ~> check
+      {
+        status should equal(StatusCodes.OK)
+        val resp = responseAs[KBEntries]
+          (resp.entries) should not be (empty)
+        (resp.entries.size) should be (6)
+        val entry = resp.entries(0)
+        ((List[String](entry.text)) should contain oneOf ("ZYX", "Zyxin", "Zyxin-2"))
+          (entry.namespace) should equal ("uniprot")
+        (entry.id) should equal ("Q15942")
+          (entry.label) should equal ("G")
+        (entry.isGeneName) should be (false)
+          (entry.isShortName) should be (false)
+      }
+    }
+
+    "POST lookup by ID only" in {
+      Post("/kblu/byId",
+        HttpEntity(ContentTypes.`application/json`,
+          """{ "id": "Q15942" }""")) ~> route ~> check
       {
         status should equal(StatusCodes.OK)
         val resp = responseAs[KBEntries]

@@ -22,7 +22,10 @@ package object msg {
   /** Indicate that there is no implicit default label for override or mixed-label KBs. */
   val NoImplicitLabel: String = ""
 
-  /** The default data source indicator for entries in the KB. */
+  /** The default entity label UID for entries in the KB. */
+  val UnknownLabel: Int = 0
+
+  /** The default data source indicator UID for entries in the KB. */
   val UnknownSource: Int = 0
 
   /** Concatenate and return a valid NS/ID from the given separate parts. */

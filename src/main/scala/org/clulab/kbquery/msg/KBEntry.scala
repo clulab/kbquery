@@ -5,7 +5,7 @@ import Species._
 /**
   * Main class representing a single knowledge base entry.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Add method to convert KBKey to a sequence of its values.
+  *   Last Modified: Update for label table.
   */
 case class KBEntry (
 
@@ -21,9 +21,6 @@ case class KBEntry (
   /** The reference ID, relative to the namespace for this entry (e.g., GO:0033110, P12345). */
   val id: String,
 
-  /** The entry type label, often inherent in the KB type. */
-  val label: String,
-
   /** Does this entry represent a Gene name or Gene synonym. */
   val isGeneName: Boolean = false,
 
@@ -36,6 +33,9 @@ case class KBEntry (
   /** The search priority level: 0 = normal, higher numbers = higher priority. */
   val priority: Int = DefaultPriority,
 
+  /** A foreign key field which points to the label for the entry within the KB. */
+  val labelNdx: Int = UnknownLabel,
+
   /** A foreign key field which indicates the source of the entry within the KB. */
   val sourceNdx: Int = UnknownSource
 
@@ -43,7 +43,7 @@ case class KBEntry (
 
   /** Convert this KBEntry to a sequence of its member values. */
   def toSeq: Seq[Any] =
-    Seq(uid, text, namespace, id, label, isGeneName, isShortName, species, priority, sourceNdx)
+    Seq(uid, text, namespace, id, isGeneName, isShortName, species, priority, labelNdx, sourceNdx)
 }
 
 
@@ -54,11 +54,29 @@ case class KBEntries (
 
 
 /**
+  * A class representing labels used to categorize entities.
+  */
+case class KBLabel (
+
+  /** The unique ID for each label. */
+  val id: Int = UnknownLabel,
+
+  /** A unique label identifying the type (category) of an entity. */
+  val label: String
+)
+
+/** A list of label records. */
+case class KBLabels (
+  val labels: List[KBLabel]
+) extends Message
+
+
+/**
   * A class representing source information for a single KB.
   */
 case class KBSource (
 
-  /** A field which indicates the source of the entry within the KB. */
+  /** The unique ID for each entry source. */
   val id: Int = UnknownSource,
 
   /** The implicit namespace for all entries in this KB. */

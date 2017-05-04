@@ -8,7 +8,7 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB entries table.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Update text queries to use joins on Keys/Entries tables.
+  *   Last Modified: Update for label table.
   */
 class Entries (tag: Tag) extends Table[EntryType](tag, "ENTRIES") {
 
@@ -17,16 +17,20 @@ class Entries (tag: Tag) extends Table[EntryType](tag, "ENTRIES") {
   def text: Rep[String]         = column[String]("text")
   def namespace: Rep[String]    = column[String]("namespace")
   def id: Rep[String]           = column[String]("id")
-  def label: Rep[String]        = column[String]("label")
   def isGeneName: Rep[Boolean]  = column[Boolean]("is_gene_name")
   def isShortName: Rep[Boolean] = column[Boolean]("is_short_name")
   def species: Rep[String]      = column[String]("species")
   def priority: Rep[Int]        = column[Int]("priority")
+  def labelNdx: Rep[Int]        = column[Int]("label_ndx")
   def sourceNdx: Rep[Int]       = column[Int]("source_ndx")
 
   // every table needs a * projection with the same type as the table's type parameter
   def * : ProvenShape[EntryType] =
-    (uid, text, namespace, id, label, isGeneName, isShortName, species, priority, sourceNdx)
+    (uid, text, namespace, id, isGeneName, isShortName, species, priority, labelNdx, sourceNdx)
+
+  // a reified foreign key relation that can be navigated to create a join
+  def label: ForeignKeyQuery[Labels, LabelType] =
+    foreignKey("LBL_FK", labelNdx, TableQuery[Labels])(_.uid)
 
   // a reified foreign key relation that can be navigated to create a join
   def source: ForeignKeyQuery[Sources, SourceType] =
@@ -41,8 +45,8 @@ object Entries extends TableQuery(new Entries(_)) {
 
   /** Convert the given KBEntry to an entries table row with the correct shape. */
   def toEntryType (kbe: KBEntry): EntryType = {
-    (0, kbe.text, kbe.namespace, kbe.id, kbe.label, kbe.isGeneName,
-      kbe.isShortName, kbe.species, kbe.priority, kbe.sourceNdx)
+    (0, kbe.text, kbe.namespace, kbe.id, kbe.isGeneName, kbe.isShortName,
+     kbe.species, kbe.priority, kbe.labelNdx, kbe.sourceNdx)
   }
 
   /** Convert an entries table row of the correct shape into a KBEntry. */
@@ -88,12 +92,6 @@ object Entries extends TableQuery(new Entries(_)) {
   /** Query to find text field synonyms by namespace and ID strings. */
   def findSynonyms (ns:String, id:String): Query[Rep[String], String, Seq] = {
     Entries.filter(kbe => (kbe.namespace === ns) && (kbe.id === id)).map(_.text)
-  }
-
-
-  /** Query to find a namespace by label and ID strings. */
-  def findNsByLabelAndId (label:String, id:String): Query[Rep[String], String, Seq] = {
-    Entries.filter(kbe => (kbe.label === label) && (kbe.id === id)).map(_.namespace)
   }
 
 }

@@ -13,22 +13,23 @@ import org.clulab.kbquery.msg.Species._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Move text generator back to loader.
+  *   Last Modified: Update for label table. Add site label.
   */
 object KBFileLoader extends LazyLogging {
 
   /** Map a label string to an abbreviated form. */
-  val shortLabel = Map[String, String] (
-    ("BioProcess" -> "BP"),
-    ("Family" -> "F"),
-    ("Gene_or_gene_product" -> "G"),
-    ("Cellular_component" -> "CC"),
-    ("CellLine" -> "CL"),
-    ("CellType" -> "CT"),
-    ("Organ" -> "O"),
-    ("Simple_chemical" -> "SC"),
-    ("Species" -> "SP"),
-    ("TissueType" -> "TT")
+  val shortLabel = Map[String, Int] (
+    ("BioProcess" -> 1),
+    ("CellLine" -> 2),
+    ("CellType" -> 3),
+    ("Cellular_component" -> 4),
+    ("Family" -> 5),
+    ("Gene_or_gene_product" -> 6),
+    ("Organ" -> 7),
+    ("Simple_chemical" -> 8),
+    ("Site" -> 9),
+    ("Species" -> 10),
+    ("TissueType" -> 11)
   )
 
   /** Load the KB specified by the given KB source information. */
@@ -85,8 +86,8 @@ object KBFileLoader extends LazyLogging {
     val id = fields(1)
     val species = if (fields(2) != Species.NoSpeciesValue) fields(2) else Species.Human
     val namespace = fields(3)
-    val label = shortLabel.getOrElse(if (fields.size > 4) fields(4) else kbInfo.label, "X")
-    KBEntry(0, text, namespace, id, label, false, false, species, OverridePriority, kbInfo.id)
+    val labelNdx = shortLabel.getOrElse(if (fields.size > 4) fields(4) else kbInfo.label, UnknownLabel)
+    KBEntry(0, text, namespace, id, false, false, species, OverridePriority, labelNdx, kbInfo.id)
   }
 
   /** Extract fields to create zero or more entries from a single uni-source input record.
@@ -101,8 +102,8 @@ object KBFileLoader extends LazyLogging {
     val id = fields(1)
     val species = if (fields.size > 2) fields(2) else NoSpeciesValue
     val namespace = if ((fields.size > 3) && fields(3).nonEmpty) fields(3) else kbInfo.namespace
-    val label = shortLabel.getOrElse(kbInfo.label, "X")
-    KBEntry(0, text, namespace, id, label, false, false, species, DefaultPriority, kbInfo.id)
+    val labelNdx = shortLabel.getOrElse(kbInfo.label, UnknownLabel)
+    KBEntry(0, text, namespace, id, false, false, species, DefaultPriority, labelNdx, kbInfo.id)
   }
 
   /** Return a Scala Source object created from the given filename string and

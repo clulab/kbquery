@@ -1,3 +1,12 @@
+-- Table specifying entity label information
+--
+CREATE TABLE `LABELS` (
+  `uid` int(11) NOT NULL,
+  `label` varchar(40) NOT NULL,
+  PRIMARY KEY (`uid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+
 -- Table specifying KB meta information
 --
 CREATE TABLE `SOURCES` (
@@ -16,17 +25,19 @@ CREATE TABLE `ENTRIES` (
   `text` varchar(80) NOT NULL,
   `namespace` varchar(40) NOT NULL,
   `id` varchar(80)  NOT NULL,
-  `label` varchar(40)  NOT NULL,
   `is_gene_name` TINYINT(1) NOT NULL,
   `is_short_name` TINYINT(1) NOT NULL,
   `species` varchar(256) NOT NULL,
   `priority` INT NOT NULL,
+  `label_ndx` INT  NOT NULL,
   `source_ndx` INT NOT NULL,
   PRIMARY KEY (uid),
   INDEX `text_ndx` (`text`),
   INDEX `namespace_ndx` (`namespace`),
   INDEX `id_ndx` (`id`),
-  INDEX `label_ndx` (`label`),
+  KEY `LBL_FK`(`label_ndx`),
+  CONSTRAINT LBL_FK FOREIGN KEY(`label_ndx`) REFERENCES `LABELS`(`uid`)
+    ON DELETE NO ACTION ON UPDATE NO ACTION,
   KEY `SRC_FK`(`source_ndx`),
   CONSTRAINT SRC_FK FOREIGN KEY(`source_ndx`) REFERENCES `SOURCES`(`uid`)
     ON DELETE NO ACTION ON UPDATE NO ACTION

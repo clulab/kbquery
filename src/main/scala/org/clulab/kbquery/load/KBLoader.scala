@@ -14,7 +14,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Update for label table.
+  *   Last Modified: Pass label-string-to-index map into refactored file loader class.
   */
 object KBLoader extends App with LazyLogging {
 
@@ -42,6 +42,11 @@ object KBLoader extends App with LazyLogging {
       KBLabel(id, label)
     }.toList
     KBLabels(labels)
+  }
+
+  /** Map from the label string to the label index. */
+  val labelToIndexMap: Map[String, Int] = {
+    labelsConfiguration.labels.map(kbl => (kbl.label -> kbl.id)).toMap
   }
 
   /** Read the sources table configuration from the configuration file. */
@@ -179,10 +184,11 @@ CREATE TABLE `TKEYS` (
   /** Use the Sources configuration to find and load the configured KB files. */
   def loadFiles: Int = {
     var total = 0
+    val kbFileLoader = new KBFileLoader(labelToIndexMap)
     checksOFF                               // turn off slow DB validation
     sourcesConfiguration.sources.foreach { kbInfo =>
       EntryBatcher.resetFileCount
-      val kbTypeCode = KBFileLoader.loadFile(kbInfo)
+      val kbTypeCode = kbFileLoader.loadFile(kbInfo)
       val fileCnt = EntryBatcher.resetFileCount
       total = EntryBatcher.flushBatch
       commitChanges                         // commit insertions for last KB

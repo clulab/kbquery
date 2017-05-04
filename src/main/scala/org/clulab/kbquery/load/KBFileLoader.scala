@@ -13,24 +13,14 @@ import org.clulab.kbquery.msg.Species._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Update for label table. Add site label.
+  *   Last Modified: Change to class to accept label-string-to-index map.
   */
-object KBFileLoader extends LazyLogging {
+class KBFileLoader (
 
-  /** Map a label string to an abbreviated form. */
-  val shortLabel = Map[String, Int] (
-    ("BioProcess" -> 1),
-    ("CellLine" -> 2),
-    ("CellType" -> 3),
-    ("Cellular_component" -> 4),
-    ("Family" -> 5),
-    ("Gene_or_gene_product" -> 6),
-    ("Organ" -> 7),
-    ("Simple_chemical" -> 8),
-    ("Site" -> 9),
-    ("Species" -> 10),
-    ("TissueType" -> 11)
-  )
+  /** A map of label strings to label indices. */
+  labelToIndex: Map[String,Int]
+
+) extends LazyLogging {
 
   /** Load the KB specified by the given KB source information. */
   def loadFile (kbInfo: KBSource): String = {
@@ -86,7 +76,8 @@ object KBFileLoader extends LazyLogging {
     val id = fields(1)
     val species = if (fields(2) != Species.NoSpeciesValue) fields(2) else Species.Human
     val namespace = fields(3)
-    val labelNdx = shortLabel.getOrElse(if (fields.size > 4) fields(4) else kbInfo.label, UnknownLabel)
+    val label = if (fields.size > 4) fields(4) else kbInfo.label
+    val labelNdx = indexForLabel(label)
     KBEntry(0, text, namespace, id, false, false, species, OverridePriority, labelNdx, kbInfo.id)
   }
 
@@ -102,8 +93,13 @@ object KBFileLoader extends LazyLogging {
     val id = fields(1)
     val species = if (fields.size > 2) fields(2) else NoSpeciesValue
     val namespace = if ((fields.size > 3) && fields(3).nonEmpty) fields(3) else kbInfo.namespace
-    val labelNdx = shortLabel.getOrElse(kbInfo.label, UnknownLabel)
+    val labelNdx = indexForLabel(kbInfo.label)
     KBEntry(0, text, namespace, id, false, false, species, DefaultPriority, labelNdx, kbInfo.id)
+  }
+
+  /** Return a label index for the given label string or special constant if label unknown. */
+  private def indexForLabel (label: String): Int = {
+    labelToIndex.getOrElse(label, UnknownLabel)
   }
 
   /** Return a Scala Source object created from the given filename string and

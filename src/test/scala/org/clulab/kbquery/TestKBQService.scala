@@ -19,7 +19,7 @@ import org.clulab.kbquery.msg._
 /**
   * Unit tests of the KBQ service class.
   *   Written by: Tom Hicks. 3/26/2017.
-  *   Last Modified: Add tests for byID methods.
+  *   Last Modified: Correct bad formatting. Add label tests.
   */
 class TestKBQService extends WordSpec
     with Matchers
@@ -31,6 +31,9 @@ class TestKBQService extends WordSpec
 
   val config = ConfigFactory.load()
   val version = config.getString("app.version")
+
+  // currently configured label for Gene_or_gene_product
+  val GGP_LABEL = 6
 
   val route = makeRoute(config)             // create the service route to test
 
@@ -51,13 +54,14 @@ class TestKBQService extends WordSpec
         status should equal(StatusCodes.OK)
         val resp = responseAs[KBEntries]
         (resp.entries) should not be (empty)
-          (resp.entries.size) should be (2)
+        (resp.entries.size) should be (2)
         val entry = resp.entries(0)
-          (entry.text) should equal ("ZZZ4")
+        (entry.text) should equal ("ZZZ4")
         (entry.namespace) should equal ("uniprot")
-          (entry.id) should equal ("P36037")
-        (entry.label) should equal ("G")
-          (entry.isGeneName) should be (false)
+        (entry.id) should equal ("P36037")
+        // (entry.label) should equal ("Gene_or_gene_product")
+        (entry.labelNdx) should equal (GGP_LABEL)
+        (entry.isGeneName) should be (false)
         (entry.isShortName) should be (false)
       }
     }
@@ -67,14 +71,15 @@ class TestKBQService extends WordSpec
         status should equal(StatusCodes.OK)
         val resp = responseAs[KBEntries]
         (resp.entries) should not be (empty)
-          (resp.entries.size) should be (6)
+        (resp.entries.size) should be (6)
         val entry = resp.entries(0)
-          ((List[String](entry.text)) should contain oneOf ("ZYX", "Zyxin", "Zyxin-2"))
+        ((List[String](entry.text)) should contain oneOf ("ZYX", "Zyxin", "Zyxin-2"))
         (entry.namespace) should equal ("uniprot")
-          (entry.id) should equal ("Q15942")
-        (entry.label) should equal ("G")
+        (entry.id) should equal ("Q15942")
+        // (entry.label) should equal ("Gene_or_gene_product")
+        (entry.labelNdx) should equal (GGP_LABEL)
         (entry.isGeneName) should be (false)
-          (entry.isShortName) should be (false)
+        (entry.isShortName) should be (false)
       }
     }
 
@@ -83,13 +88,14 @@ class TestKBQService extends WordSpec
         status should equal(StatusCodes.OK)
         val resp = responseAs[KBEntries]
         (resp.entries) should not be (empty)
-          (resp.entries.size) should be (6)
+        (resp.entries.size) should be (6)
         val entry = resp.entries(0)
-          ((List[String](entry.text)) should contain oneOf ("ZYX", "Zyxin", "Zyxin-2"))
+        ((List[String](entry.text)) should contain oneOf ("ZYX", "Zyxin", "Zyxin-2"))
         (entry.namespace) should equal ("uniprot")
-          (entry.id) should equal ("Q15942")
-        (entry.label) should equal ("G")
-          (entry.isGeneName) should be (false)
+        (entry.id) should equal ("Q15942")
+        // (entry.label) should equal ("Gene_or_gene_product")
+        (entry.labelNdx) should equal (GGP_LABEL)
+        (entry.isGeneName) should be (false)
         (entry.isShortName) should be (false)
       }
     }
@@ -99,13 +105,14 @@ class TestKBQService extends WordSpec
         status should equal(StatusCodes.OK)
         val resp = responseAs[KBEntries]
         (resp.entries) should not be (empty)
-          (resp.entries.size) should be (6)
+        (resp.entries.size) should be (6)
         val entry = resp.entries(0)
-          ((List[String](entry.text)) should contain oneOf ("ZYX", "Zyxin", "Zyxin-2"))
+        ((List[String](entry.text)) should contain oneOf ("ZYX", "Zyxin", "Zyxin-2"))
         (entry.namespace) should equal ("uniprot")
-          (entry.id) should equal ("Q15942")
-        (entry.label) should equal ("G")
-          (entry.isGeneName) should be (false)
+        (entry.id) should equal ("Q15942")
+        // (entry.label) should equal ("Gene_or_gene_product")
+        (entry.labelNdx) should equal (GGP_LABEL)
+        (entry.isGeneName) should be (false)
         (entry.isShortName) should be (false)
       }
     }
@@ -115,11 +122,11 @@ class TestKBQService extends WordSpec
         status should equal(StatusCodes.OK)
         val resp = responseAs[Synonyms]
         (resp.synonyms) should not be (empty)
-          (resp.synonyms.size) should be (12)
+        (resp.synonyms.size) should be (12)
         (resp.synonyms) should contain ("AMPKa1")
-          (resp.synonyms) should contain ("AMPK-a1")
+        (resp.synonyms) should contain ("AMPK-a1")
         (resp.synonyms) should contain ("AMPK-alpha1")
-          (resp.synonyms) should contain ("AMPK alpha-1")
+        (resp.synonyms) should contain ("AMPK alpha-1")
       }
     }
 
@@ -133,32 +140,35 @@ class TestKBQService extends WordSpec
           status should equal(StatusCodes.OK)
           val resp = responseAs[KBEntries]
           (resp.entries) should not be (empty)
-            (resp.entries.size) should be (2)
+          (resp.entries.size) should be (2)
           val entry = resp.entries(0)
-            (entry.text) should equal ("ZZZ4")
+          (entry.text) should equal ("ZZZ4")
           (entry.namespace) should equal ("uniprot")
-            (entry.id) should equal ("P36037")
-          (entry.label) should equal ("G")
-            (entry.isGeneName) should be (false)
+          (entry.id) should equal ("P36037")
+          // (entry.label) should equal ("Gene_or_gene_product")
+          (entry.labelNdx) should equal (GGP_LABEL)
+          (entry.isGeneName) should be (false)
           (entry.isShortName) should be (false)
         }
     }
 
     "POST lookup by nsId" in {
       Post("/kblu/byNsId",
-        HttpEntity(ContentTypes.`application/json`, """{ "nsId": "uniprot:Q15942" }""")) ~> route ~> check
+        HttpEntity(ContentTypes.`application/json`,
+          """{ "nsId": "uniprot:Q15942" }""")) ~> route ~> check
       {
         status should equal(StatusCodes.OK)
         val resp = responseAs[KBEntries]
-          (resp.entries) should not be (empty)
+        (resp.entries) should not be (empty)
         (resp.entries.size) should be (6)
         val entry = resp.entries(0)
         ((List[String](entry.text)) should contain oneOf ("ZYX", "Zyxin", "Zyxin-2"))
-          (entry.namespace) should equal ("uniprot")
+        (entry.namespace) should equal ("uniprot")
         (entry.id) should equal ("Q15942")
-          (entry.label) should equal ("G")
+        // (entry.label) should equal ("Gene_or_gene_product")
+        (entry.labelNdx) should equal (GGP_LABEL)
         (entry.isGeneName) should be (false)
-          (entry.isShortName) should be (false)
+        (entry.isShortName) should be (false)
       }
     }
 
@@ -169,15 +179,16 @@ class TestKBQService extends WordSpec
       {
         status should equal(StatusCodes.OK)
         val resp = responseAs[KBEntries]
-          (resp.entries) should not be (empty)
+        (resp.entries) should not be (empty)
         (resp.entries.size) should be (6)
         val entry = resp.entries(0)
         ((List[String](entry.text)) should contain oneOf ("ZYX", "Zyxin", "Zyxin-2"))
-          (entry.namespace) should equal ("uniprot")
+        (entry.namespace) should equal ("uniprot")
         (entry.id) should equal ("Q15942")
-          (entry.label) should equal ("G")
+        // (entry.label) should equal ("Gene_or_gene_product")
+        (entry.labelNdx) should equal (GGP_LABEL)
         (entry.isGeneName) should be (false)
-          (entry.isShortName) should be (false)
+        (entry.isShortName) should be (false)
       }
     }
 
@@ -188,15 +199,16 @@ class TestKBQService extends WordSpec
       {
         status should equal(StatusCodes.OK)
         val resp = responseAs[KBEntries]
-          (resp.entries) should not be (empty)
+        (resp.entries) should not be (empty)
         (resp.entries.size) should be (6)
         val entry = resp.entries(0)
         ((List[String](entry.text)) should contain oneOf ("ZYX", "Zyxin", "Zyxin-2"))
-          (entry.namespace) should equal ("uniprot")
+        (entry.namespace) should equal ("uniprot")
         (entry.id) should equal ("Q15942")
-          (entry.label) should equal ("G")
+        // (entry.label) should equal ("Gene_or_gene_product")
+        (entry.labelNdx) should equal (GGP_LABEL)
         (entry.isGeneName) should be (false)
-          (entry.isShortName) should be (false)
+        (entry.isShortName) should be (false)
       }
     }
 
@@ -207,11 +219,11 @@ class TestKBQService extends WordSpec
       {
         status should equal(StatusCodes.OK)
         val resp = responseAs[Synonyms]
-          (resp.synonyms) should not be (empty)
+        (resp.synonyms) should not be (empty)
         (resp.synonyms.size) should be (12)
-          (resp.synonyms) should contain ("AMPKa1")
+        (resp.synonyms) should contain ("AMPKa1")
         (resp.synonyms) should contain ("AMPK-a1")
-          (resp.synonyms) should contain ("AMPK-alpha1")
+        (resp.synonyms) should contain ("AMPK-alpha1")
         (resp.synonyms) should contain ("AMPK alpha-1")
       }
     }

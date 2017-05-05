@@ -14,7 +14,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Pass label-string-to-index map into refactored file loader class.
+  *   Last Modified: Make labels a list in configuration file.
   */
 object KBLoader extends App with LazyLogging {
 
@@ -32,15 +32,12 @@ object KBLoader extends App with LazyLogging {
   )
   // DBs.setup('kbqdb)                         // Use with configured connection pool
 
-  /** Read the labels table configuration from the configuration file. */
+  /** Read the labels list from the configuration file. */
   val labelsConfiguration: KBLabels = {
-    val lblMetaInfo = config.getList("app.loader.labels")
-    val labels = lblMetaInfo.iterator().asScala.map { lblLine =>
-      val lbl = lblLine.asInstanceOf[ConfigObject].toConfig
-      val id = lbl.getInt("id")
-      val label = lbl.getString("label")
-      KBLabel(id, label)
-    }.toList
+    val lblList = config.getList("app.loader.labels").unwrapped.asScala.toList
+    val labels = lblList.zip(Stream from 1).map { case (label, index) =>
+      KBLabel(index, label.asInstanceOf[String])
+    }
     KBLabels(labels)
   }
 

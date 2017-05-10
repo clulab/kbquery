@@ -13,12 +13,15 @@ import org.clulab.kbquery.msg.Species._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Change to class to accept label-string-to-index map.
+  *   Last Modified: Update for namespace table.
   */
 class KBFileLoader (
 
   /** A map of label strings to label indices. */
-  labelToIndex: Map[String,Int]
+  labelToIndex: Map[String,Int],
+
+  /** A map of namespace strings to namespace indices. */
+  namespaceToIndex: Map[String,Int]
 
 ) extends LazyLogging {
 
@@ -76,9 +79,10 @@ class KBFileLoader (
     val id = fields(1)
     val species = if (fields(2) != Species.NoSpeciesValue) fields(2) else Species.Human
     val namespace = fields(3)
+    val nsNdx = indexForNamespace(namespace)
     val label = if (fields.size > 4) fields(4) else kbInfo.label
     val labelNdx = indexForLabel(label)
-    KBEntry(0, text, namespace, id, false, false, species, OverridePriority, labelNdx, kbInfo.id)
+    KBEntry(0, text, id, false, false, species, OverridePriority, labelNdx, nsNdx, kbInfo.id)
   }
 
   /** Extract fields to create zero or more entries from a single uni-source input record.
@@ -93,13 +97,19 @@ class KBFileLoader (
     val id = fields(1)
     val species = if (fields.size > 2) fields(2) else NoSpeciesValue
     val namespace = if ((fields.size > 3) && fields(3).nonEmpty) fields(3) else kbInfo.namespace
+    val nsNdx = indexForNamespace(namespace)
     val labelNdx = indexForLabel(kbInfo.label)
-    KBEntry(0, text, namespace, id, false, false, species, DefaultPriority, labelNdx, kbInfo.id)
+    KBEntry(0, text, id, false, false, species, DefaultPriority, labelNdx, nsNdx, kbInfo.id)
   }
 
   /** Return a label index for the given label string or special constant if label unknown. */
   private def indexForLabel (label: String): Int = {
     labelToIndex.getOrElse(label, UnknownLabel)
+  }
+
+  /** Return a namespace index for the given namespace string or special constant if ns unknown. */
+  private def indexForNamespace (ns: String): Int = {
+    namespaceToIndex.getOrElse(ns.toLowerCase, UnknownNamespace)
   }
 
   /** Return a Scala Source object created from the given filename string and

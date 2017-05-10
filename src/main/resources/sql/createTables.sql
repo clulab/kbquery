@@ -7,6 +7,15 @@ CREATE TABLE `LABELS` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 
+-- Table specifying entity namespace information
+--
+CREATE TABLE `NAMESPACES` (
+  `uid` int(11) NOT NULL,
+  `namespace` varchar(40) NOT NULL,
+  PRIMARY KEY (`uid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+
 -- Table specifying KB meta information
 --
 CREATE TABLE `SOURCES` (
@@ -23,7 +32,6 @@ CREATE TABLE `SOURCES` (
 CREATE TABLE `ENTRIES` (
   `uid` INT NOT NULL AUTO_INCREMENT,
   `text` varchar(80) NOT NULL,
-  `namespace` varchar(40) NOT NULL,
   `id` varchar(80)  NOT NULL,
   `is_gene_name` TINYINT(1) NOT NULL,
   `is_short_name` TINYINT(1) NOT NULL,
@@ -33,10 +41,12 @@ CREATE TABLE `ENTRIES` (
   `source_ndx` INT NOT NULL,
   PRIMARY KEY (uid),
   INDEX `text_ndx` (`text`),
-  INDEX `namespace_ndx` (`namespace`),
   INDEX `id_ndx` (`id`),
   KEY `LBL_FK`(`label_ndx`),
   CONSTRAINT LBL_FK FOREIGN KEY(`label_ndx`) REFERENCES `LABELS`(`uid`)
+    ON DELETE NO ACTION ON UPDATE NO ACTION,
+  KEY `NS_FK`(`ns_ndx`),
+  CONSTRAINT NS_FK FOREIGN KEY(`ns_ndx`) REFERENCES `NAMESPACES`(`uid`)
     ON DELETE NO ACTION ON UPDATE NO ACTION,
   KEY `SRC_FK`(`source_ndx`),
   CONSTRAINT SRC_FK FOREIGN KEY(`source_ndx`) REFERENCES `SOURCES`(`uid`)

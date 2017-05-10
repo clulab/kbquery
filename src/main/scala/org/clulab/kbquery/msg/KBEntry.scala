@@ -5,7 +5,7 @@ import Species._
 /**
   * Main class representing a single knowledge base entry.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Update for label table.
+  *   Last Modified: Update for namespace table.
   */
 case class KBEntry (
 
@@ -14,9 +14,6 @@ case class KBEntry (
 
   /** Text for this entry, as found in the external KB. */
   val text: String,
-
-  /** The external namespace for this entry (e.g., go, uniprot). */
-  val namespace: String,
 
   /** The reference ID, relative to the namespace for this entry (e.g., GO:0033110, P12345). */
   val id: String,
@@ -36,6 +33,9 @@ case class KBEntry (
   /** A foreign key field which points to the label for the entry within the KB. */
   val labelNdx: Int = UnknownLabel,
 
+  /** A foreign key field which points to the namespace for the entry within the KB. */
+  val nsNdx: Int = UnknownNamespace,
+
   /** A foreign key field which indicates the source of the entry within the KB. */
   val sourceNdx: Int = UnknownSource
 
@@ -43,9 +43,8 @@ case class KBEntry (
 
   /** Convert this KBEntry to a sequence of its member values. */
   def toSeq: Seq[Any] =
-    Seq(uid, text, namespace, id, isGeneName, isShortName, species, priority, labelNdx, sourceNdx)
+    Seq(uid, text, id, isGeneName, isShortName, species, priority, labelNdx, nsNdx, sourceNdx)
 }
-
 
 /** A set of knowledge base entries, mostly a result of querying the KB. */
 case class KBEntries (
@@ -57,7 +56,6 @@ case class KBEntries (
   * A class representing labels used to categorize entities.
   */
 case class KBLabel (
-
   /** The unique ID for each label. */
   val id: Int = UnknownLabel,
 
@@ -72,10 +70,26 @@ case class KBLabels (
 
 
 /**
+  * A class representing a namespace for by an entity.
+  */
+case class KBNamespace (
+  /** The unique ID for each namespace. */
+  val id: Int = UnknownNamespace,
+
+  /** A unique name identifying the namespace. */
+  val namespace: String
+)
+
+/** A list of namespace records. */
+case class KBNamespaces (
+  val namespaces: List[KBNamespace]
+) extends Message
+
+
+/**
   * A class representing source information for a single KB.
   */
 case class KBSource (
-
   /** The unique ID for each entry source. */
   val id: Int = UnknownSource,
 
@@ -100,7 +114,6 @@ case class KBSources (
   * lexical form for an entity in the Entries table.
   */
 case class KBKey (
-
   /** A text string formed by perturbing the text field of the corresponding Entries text field. */
   val text: String,
 

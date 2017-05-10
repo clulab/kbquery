@@ -15,22 +15,26 @@ class Entries (tag: Tag) extends Table[EntryType](tag, "ENTRIES") {
   // NB: Any field changes, additions, or deletions must also be updated in the package types!
   def uid: Rep[Int]             = column[Int]("uid", O.PrimaryKey, O.AutoInc)
   def text: Rep[String]         = column[String]("text")
-  def namespace: Rep[String]    = column[String]("namespace")
   def id: Rep[String]           = column[String]("id")
   def isGeneName: Rep[Boolean]  = column[Boolean]("is_gene_name")
   def isShortName: Rep[Boolean] = column[Boolean]("is_short_name")
   def species: Rep[String]      = column[String]("species")
   def priority: Rep[Int]        = column[Int]("priority")
   def labelNdx: Rep[Int]        = column[Int]("label_ndx")
+  def nsNdx: Rep[Int]           = column[Int]("ns_ndx")
   def sourceNdx: Rep[Int]       = column[Int]("source_ndx")
 
   // every table needs a * projection with the same type as the table's type parameter
   def * : ProvenShape[EntryType] =
-    (uid, text, namespace, id, isGeneName, isShortName, species, priority, labelNdx, sourceNdx)
+    (uid, text, id, isGeneName, isShortName, species, priority, labelNdx, nsNdx, sourceNdx)
 
   // a reified foreign key relation that can be navigated to create a join
   def label: ForeignKeyQuery[Labels, LabelType] =
     foreignKey("LBL_FK", labelNdx, TableQuery[Labels])(_.uid)
+
+  // a reified foreign key relation that can be navigated to create a join
+  def namespace: ForeignKeyQuery[Namespaces, NamespaceType] =
+    foreignKey("NS_FK", nsNdx, TableQuery[Namespaces])(_.uid)
 
   // a reified foreign key relation that can be navigated to create a join
   def source: ForeignKeyQuery[Sources, SourceType] =
@@ -45,8 +49,8 @@ object Entries extends TableQuery(new Entries(_)) {
 
   /** Convert the given KBEntry to an entries table row with the correct shape. */
   def toEntryType (kbe: KBEntry): EntryType = {
-    (0, kbe.text, kbe.namespace, kbe.id, kbe.isGeneName, kbe.isShortName,
-     kbe.species, kbe.priority, kbe.labelNdx, kbe.sourceNdx)
+    (0, kbe.text, kbe.id, kbe.isGeneName, kbe.isShortName, kbe.species,
+      kbe.priority, kbe.labelNdx, kbe.nsNdx, kbe.sourceNdx)
   }
 
   /** Convert an entries table row of the correct shape into a KBEntry. */

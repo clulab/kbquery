@@ -14,7 +14,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Make labels a list in configuration file.
+  *   Last Modified: Update for namespace table.
   */
 object KBLoader extends App with LazyLogging {
 
@@ -32,24 +32,39 @@ object KBLoader extends App with LazyLogging {
   )
   // DBs.setup('kbqdb)                         // Use with configured connection pool
 
+
   /** Read the labels list from the configuration file. */
-  val labelsConfiguration: KBLabels = {
+  private val labelsConfiguration: List[KBLabel] = {
     val lblList = config.getList("app.loader.labels").unwrapped.asScala.toList
-    val labels = lblList.zip(Stream from 1).map { case (label, index) =>
+    lblList.zip(Stream from 1).map { case (label, index) =>
       KBLabel(index, label.asInstanceOf[String])
     }
-    KBLabels(labels)
   }
 
   /** Map from the label string to the label index. */
   val labelToIndexMap: Map[String, Int] = {
-    labelsConfiguration.labels.map(kbl => (kbl.label -> kbl.id)).toMap
+    labelsConfiguration.map(kbl => (kbl.label -> kbl.id)).toMap
   }
 
+
+  /** Read the namespaces list from the configuration file. */
+  private val nsConfiguration: List[KBNamespace] = {
+    val nsList = config.getList("app.loader.namespaces").unwrapped.asScala.toList
+    nsList.zip(Stream from 1).map { case (namespace, index) =>
+      KBNamespace(index, namespace.asInstanceOf[String])
+    }
+  }
+
+  /** Map from the namespace string to the namespace index. */
+  val nsToIndexMap: Map[String, Int] = {
+    nsConfiguration.map(kbn => (kbn.namespace -> kbn.id)).toMap
+  }
+
+
   /** Read the sources table configuration from the configuration file. */
-  val sourcesConfiguration: KBSources = {
+  private val sourcesConfiguration: List[KBSource] = {
     val srcMetaInfo = config.getList("app.loader.sources")
-    val sources = srcMetaInfo.iterator().asScala.map { srcLine =>
+    srcMetaInfo.iterator().asScala.map { srcLine =>
       val src = srcLine.asInstanceOf[ConfigObject].toConfig
       val id = src.getInt("id")
       val namespace = src.getString("ns")
@@ -57,7 +72,6 @@ object KBLoader extends App with LazyLogging {
       val label = src.getString("label")
       KBSource(id, namespace, filename, label)
     }.toList
-    KBSources(sources)
   }
 
   /** Drop the tables if they exist. */
@@ -66,6 +80,7 @@ object KBLoader extends App with LazyLogging {
     sql"DROP TABLE IF EXISTS `TKEYS`".execute.apply()
     sql"DROP TABLE IF EXISTS `ENTRIES`".execute.apply()
     sql"DROP TABLE IF EXISTS `LABELS`".execute.apply()
+    sql"DROP TABLE IF EXISTS `NAMESPACES`".execute.apply()
     sql"DROP TABLE IF EXISTS `SOURCES`".execute.apply()
     commitChanges                           // commit the table drop
   }
@@ -108,6 +123,14 @@ CREATE TABLE `LABELS` (
     """.execute.apply()
 
     sql"""
+CREATE TABLE `NAMESPACES` (
+  `uid` int(11) NOT NULL,
+  `namespace` varchar(40) NOT NULL,
+  PRIMARY KEY (`uid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+    """.execute.apply()
+
+    sql"""
 CREATE TABLE `SOURCES` (
   `uid` int(11) NOT NULL,
   `namespace` varchar(20) NOT NULL,
@@ -121,7 +144,6 @@ CREATE TABLE `SOURCES` (
 CREATE TABLE `ENTRIES` (
   `uid` INT NOT NULL AUTO_INCREMENT,
   `text` varchar(80) NOT NULL,
-  `namespace` varchar(40) NOT NULL,
   `id` varchar(80)  NOT NULL,
   `is_gene_name` TINYINT(1) NOT NULL,
   `is_short_name` TINYINT(1) NOT NULL,
@@ -131,10 +153,12 @@ CREATE TABLE `ENTRIES` (
   `source_ndx` INT NOT NULL,
   PRIMARY KEY (uid),
   INDEX `text_ndx` (`text`),
-  INDEX `namespace_ndx` (`namespace`),
   INDEX `id_ndx` (`id`),
   KEY `LBL_FK`(`label_ndx`),
   CONSTRAINT LBL_FK FOREIGN KEY(`label_ndx`) REFERENCES `LABELS`(`uid`)
+    ON DELETE NO ACTION ON UPDATE NO ACTION,
+  KEY `NS_FK`(`ns_ndx`),
+  CONSTRAINT NS_FK FOREIGN KEY(`ns_ndx`) REFERENCES `NAMESPACES`(`uid`)
     ON DELETE NO ACTION ON UPDATE NO ACTION,
   KEY `SRC_FK`(`source_ndx`),
   CONSTRAINT SRC_FK FOREIGN KEY(`source_ndx`) REFERENCES `SOURCES`(`uid`)
@@ -160,17 +184,25 @@ CREATE TABLE `TKEYS` (
   /** Load the Labels table with the information extracted from the configuration file. */
   def loadLabels (implicit session:DBSession = AutoSession): Unit = {
     checksOFF                               // turn off slow DB validation
-    labelsConfiguration.labels.foreach { lbl =>
+    labelsConfiguration.foreach { lbl =>
       sql"""insert into Labels values (${lbl.id}, ${lbl.label})""".update.apply()
     }
     commitChanges                           // commit insertions
   }
 
+  /** Load the Namespaces table with the information extracted from the configuration file. */
+  def loadNamespaces (implicit session:DBSession = AutoSession): Unit = {
+    checksOFF                               // turn off slow DB validation
+    nsConfiguration.foreach { ns =>
+      sql"""insert into Namespaces values (${ns.id}, ${ns.namespace})""".update.apply()
+    }
+    commitChanges                           // commit insertions
+  }
 
   /** Load the Sources table with the information extracted from the configuration file. */
   def loadSources (implicit session:DBSession = AutoSession): Unit = {
     checksOFF                               // turn off slow DB validation
-    sourcesConfiguration.sources.foreach { src =>
+    sourcesConfiguration.foreach { src =>
       sql"""insert into Sources values (
               ${src.id}, ${src.namespace}, ${src.filename}, ${src.label})""".update.apply()
     }
@@ -181,9 +213,9 @@ CREATE TABLE `TKEYS` (
   /** Use the Sources configuration to find and load the configured KB files. */
   def loadFiles: Int = {
     var total = 0
-    val kbFileLoader = new KBFileLoader(labelToIndexMap)
+    val kbFileLoader = new KBFileLoader(labelToIndexMap, nsToIndexMap)
     checksOFF                               // turn off slow DB validation
-    sourcesConfiguration.sources.foreach { kbInfo =>
+    sourcesConfiguration.foreach { kbInfo =>
       EntryBatcher.resetFileCount
       val kbTypeCode = kbFileLoader.loadFile(kbInfo)
       val fileCnt = EntryBatcher.resetFileCount
@@ -255,6 +287,7 @@ CREATE TABLE `TKEYS` (
   dropTables
   createTables
   loadLabels                                // load the KB labels table from config
+  loadNamespaces                            // load the KB namespaces table from config
   loadSources                               // load the KB meta info table from config
   var entCnt = 0
   entCnt = loadFiles                        // the major work: load all KB data files

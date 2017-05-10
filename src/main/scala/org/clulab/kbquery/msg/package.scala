@@ -25,6 +25,9 @@ package object msg {
   /** The default entity label UID for entries in the KB. */
   val UnknownLabel: Int = 0
 
+  /** The default namespace UID for entries in the KB. */
+  val UnknownNamespace: Int = 0
+
   /** The default data source indicator UID for entries in the KB. */
   val UnknownSource: Int = 0
 

@@ -3,6 +3,7 @@ package org.clulab.kbquery
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+
 import com.typesafe.config._
 
 import slick.jdbc.MySQLProfile.api._
@@ -13,9 +14,9 @@ import org.clulab.kbquery.dao._
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Update for keys table.
+  *   Last Modified: Update for namespace table: disable ns methods until rewrite.
   */
-object DBManager {
+class DBManager {
 
   /** The Slick database manipulated by this manager class. */
   val theDB = Database.forConfig("db.kbqdb")
@@ -36,7 +37,9 @@ object DBManager {
 
   /** Return the (possibly empty) set of KB entries for the given namespace and ID string. */
   def byNsAndId (ns:String, id:String): KBEntries = {
-    queryToKBEntries(Entries.findByNsAndId(ns, id))
+    // val nsNdx = namespaceToIndex.getOrElse(ns.toLowerCase, UnknownNamespace)
+    // queryToKBEntries(Entries.findByNsAndId(nsNdx, id))
+    KBEntries(List.empty[KBEntry])          // TODO: REPLACE LATER
   }
 
   /** Return the (possibly empty) set of all KB entries exactly matching the given text string. */
@@ -51,9 +54,11 @@ object DBManager {
 
   /** Return the (possibly empty) set of textual synonyms for the given NS/ID string. */
   def synonyms (ns:String, id:String): Synonyms = {
-    val query = Entries.findSynonyms(ns, id)
-    val data = theDB.run(query.result.map(rows => Entries.toSynonyms(rows)))
-    return Await.result(data, Duration.Inf)
+    // val nsNdx = namespaceToIndex.getOrElse(ns.toLowerCase, UnknownNamespace)
+    // val query = Entries.findSynonyms(nsNdx, id)
+    // val data = theDB.run(query.result.map(rows => Entries.toSynonyms(rows)))
+    // return Await.result(data, Duration.Inf)
+    Synonyms(List.empty[String])            // TODO: REPLACE LATER
   }
 
   /** Count all records in the Entries table. */

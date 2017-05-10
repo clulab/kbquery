@@ -9,12 +9,18 @@ import scalikejdbc.config._
 import org.clulab.kbquery.msg._
 
 /**
-  * Singleton which accumulates a limited, configurable number of entries before
+  * Class which accumulates a limited, configurable number of entries before
   * periodically writing them all to the database as a batch.
   *   Written by: Tom Hicks. 4/4/2017.
-  *   Last Modified: Get batch size from package object.
+  *   Last Modified: Major refactoring to classes.
   */
-object EntryBatcher extends LazyLogging {
+class EntryBatcher (
+
+  /** The parent loader for which this class is providing batching services. */
+  kbLoader: KBLoader
+
+) extends LazyLogging {
+
   private val batch = new ListBuffer[KBEntry] // buffer to hold the current batch of entries
   private var fileTotal: Int = 0            // count of items from the current input file
   private var total: Int = 0                // total count of all entries processed
@@ -30,7 +36,7 @@ object EntryBatcher extends LazyLogging {
     total += numEntries                     // increment total items count
     // if batch exceeds batch size OR batch not enabled
     if (!batchEnabled || (batch.size > BatchSize)) {
-      KBLoader.writeBatch(batch.toSeq)      // then write out the batch
+      kbLoader.writeBatch(batch.toSeq)      // then write out the batch
       batch.clear                           // and reset the batch to empty
     }
     return numEntries                       // return number of entries processed
@@ -38,7 +44,7 @@ object EntryBatcher extends LazyLogging {
 
   /** Flush any remaining entries to the database and return total count of items written. */
   def flushBatch: Int = {
-    KBLoader.writeBatch(batch.toSeq)        // write remaining items in the batch
+    kbLoader.writeBatch(batch.toSeq)        // write remaining items in the batch
     batch.clear                             // and reset the batch to empty
     return total                            // return total items written
   }

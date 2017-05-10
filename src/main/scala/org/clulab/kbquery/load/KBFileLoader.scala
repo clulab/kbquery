@@ -13,9 +13,12 @@ import org.clulab.kbquery.msg.Species._
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Update for namespace table.
+  *   Last Modified: Major refactoring: add parent loader class ctor argument.
   */
 class KBFileLoader (
+
+  /** The parent loader for which this class is providing file loading. */
+  kbLoader: KBLoader,
 
   /** A map of label strings to label indices. */
   labelToIndex: Map[String,Int],
@@ -46,7 +49,7 @@ class KBFileLoader (
     val source: Option[Source] = sourceFromFilename(kbInfo.filename)
     if (source.isDefined) {
       source.get.getLines.map(tsvRowToFields(_)).filter(validateMultiFields(_)).foreach { fields =>
-        KBLoader.loadEntries(Seq(entryFromMultiFields(kbInfo, fields)))
+        kbLoader.loadEntries(Seq(entryFromMultiFields(kbInfo, fields)))
       }
       source.get.close
     }
@@ -61,7 +64,7 @@ class KBFileLoader (
     val source: Option[Source] = sourceFromFilename(kbInfo.filename)
     if (source.isDefined) {
       source.get.getLines.map(tsvRowToFields(_)).filter(validateUniFields(_)).foreach { fields =>
-        KBLoader.loadEntries(Seq(entryFromUniFields(kbInfo, fields)))
+        kbLoader.loadEntries(Seq(entryFromUniFields(kbInfo, fields)))
       }
       source.get.close
     }

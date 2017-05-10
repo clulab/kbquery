@@ -1,15 +1,21 @@
 package org.clulab.kbquery
 
+import com.typesafe.scalalogging.LazyLogging
+
 import org.clulab.kbquery.msg._
-import org.clulab.kbquery.DBManager._
 import org.clulab.kbquery.KBKeyTransforms._
 
 /**
   * Singleton class implementing knowledge base lookup and manipulation methods.
   *   Written by: Tom Hicks. 3/25/2017.
-  *   Last Modified: Add byId lookup.
+  *   Last Modified: Major refactoring to classes.
   */
-object KBLookup {
+class KBLookup (
+
+  /** Class incorporating the specifics of a particular DB implementation. */
+  dbManager: DBManager
+
+) extends LazyLogging {
 
   /** Constant denoting an empty set of KB entries. */
   val NoEntries: List[KBEntry] = List.empty[KBEntry]
@@ -18,9 +24,19 @@ object KBLookup {
   val NoTexts: List[String] = List.empty[String]
 
 
+  // Facade pass-thru calls:
+  //
+  def countEntries: Map[String, Int] = dbManager.countEntries
+  def countKeys: Map[String, Int] = dbManager.countKeys
+  def countSources: Map[String, Int] = dbManager.countSources
+  def dumpEntries: KBEntries = dbManager.dumpEntries
+  def dumpKeys: KBKeys = dbManager.dumpKeys
+  def dumpSources: KBSources = dbManager.dumpSources
+
+
   /** Return the (possibly empty) set of KB entries for the given ID string, in any namespace. */
   def lookupId (id:String): KBEntries = {
-    return DBManager.byId(id)
+    return dbManager.byId(id)
   }
 
   /** Return the (possibly empty) set of KB entries for the given NS/ID string. */
@@ -29,14 +45,14 @@ object KBLookup {
     if (parts.nonEmpty) {                   // if not empty there are 2 parts
       val ns = parts(0)
       val id = parts(1)
-      return DBManager.byNsAndId(ns, id)
+      return dbManager.byNsAndId(ns, id)
     }
     else KBEntries(NoEntries)               // else empty result set
   }
 
   /** Return the (possibly empty) set of KB entries for the given namespace and ID string. */
   def lookupNsAndId (ns:String, id:String): KBEntries = {
-    return DBManager.byNsAndId(ns, id)
+    return dbManager.byNsAndId(ns, id)
   }
 
  //  /** Try lookups for all given NS/IDs until one succeeds or all fail. */
@@ -51,14 +67,14 @@ object KBLookup {
   def lookup (text: String): KBEntries = {
     val textSet = applyAllTransforms(DefaultKeyTransforms, text).toSet
     if (textSet.nonEmpty)
-      DBManager.byTextSet(textSet)
+      dbManager.byTextSet(textSet)
     else
       KBEntries(NoEntries)                  // else empty result set
   }
 
   /** Return the (possibly empty) set of all KB entries exactly matching the given text string. */
   def lookupText (text: String): KBEntries = {
-    return DBManager.byText(text)
+    return dbManager.byText(text)
   }
 
  //  /** Find the set of KB entries, for the given text string, which match the given
@@ -87,7 +103,7 @@ object KBLookup {
     if (parts.nonEmpty) {                   // if not empty there are 2 parts
       val ns = parts(0)
       val id = parts(1)
-      return DBManager.synonyms(ns, id)
+      return dbManager.synonyms(ns, id)
     }
     else Synonyms(NoTexts)                  // else empty result set
   }

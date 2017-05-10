@@ -8,7 +8,7 @@ import org.clulab.kbquery.msg._
 /**
   * A Slick table definition for the KB entries table.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Update for label table.
+  *   Last Modified: Update for namespace table.
   */
 class Entries (tag: Tag) extends Table[EntryType](tag, "ENTRIES") {
 
@@ -73,8 +73,8 @@ object Entries extends TableQuery(new Entries(_)) {
   }
 
   /** Query to find records by namespace and ID strings. */
-  def findByNsAndId (ns:String, id:String): Query[Entries, EntryType, Seq] = {
-    Entries.filter(kbe => (kbe.namespace === ns) && (kbe.id === id))
+  def findByNsAndId (nsNdx:Int, id:String): Query[Entries, EntryType, Seq] = {
+    Entries.filter(kbe => (kbe.nsNdx === nsNdx) && (kbe.id === id))
   }
 
   /** Query to find records exactly matching the given text string. */
@@ -94,8 +94,8 @@ object Entries extends TableQuery(new Entries(_)) {
   }
 
   /** Query to find text field synonyms by namespace and ID strings. */
-  def findSynonyms (ns:String, id:String): Query[Rep[String], String, Seq] = {
-    Entries.filter(kbe => (kbe.namespace === ns) && (kbe.id === id)).map(_.text)
+  def findSynonyms (nsNdx:Int, id:String): Query[Rep[String], String, Seq] = {
+    Entries.filter(kbe => (kbe.nsNdx === nsNdx) && (kbe.id === id)).map(_.text)
   }
 
 }

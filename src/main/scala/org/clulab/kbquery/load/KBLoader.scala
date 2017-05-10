@@ -11,14 +11,23 @@ import org.clulab.kbquery.KBKeyTransforms._
 import org.clulab.kbquery.dao._
 import org.clulab.kbquery.msg._
 
+import org.clulab.kbquery.SubApplication
+
+
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Update for namespace table.
+  *   Last Modified: Major refactoring to classes.
   */
-object KBLoader extends App with LazyLogging {
+class KBLoader (
 
-  val argsList = args.toList                // save any command line arguments
+  /** Application command line argument list. */
+  argsList: List[String],
+
+  /** Application configuration. */
+  config: Config
+
+) extends SubApplication with LazyLogging {
 
   // implicit session provider makes Scalike interface much easier to use
   implicit val session = AutoSession
@@ -32,6 +41,8 @@ object KBLoader extends App with LazyLogging {
   )
   // DBs.setup('kbqdb)                         // Use with configured connection pool
 
+  val entryBatcher = new EntryBatcher(this)
+  val keyBatcher = new KeyBatcher(this)
 
   /** Read the labels list from the configuration file. */
   private val labelsConfiguration: List[KBLabel] = {
@@ -42,7 +53,7 @@ object KBLoader extends App with LazyLogging {
   }
 
   /** Map from the label string to the label index. */
-  val labelToIndexMap: Map[String, Int] = {
+  private val labelToIndexMap: Map[String, Int] = {
     labelsConfiguration.map(kbl => (kbl.label -> kbl.id)).toMap
   }
 
@@ -56,7 +67,7 @@ object KBLoader extends App with LazyLogging {
   }
 
   /** Map from the namespace string to the namespace index. */
-  val nsToIndexMap: Map[String, Int] = {
+  private val nsToIndexMap: Map[String, Int] = {
     nsConfiguration.map(kbn => (kbn.namespace -> kbn.id)).toMap
   }
 
@@ -125,7 +136,7 @@ CREATE TABLE `LABELS` (
     sql"""
 CREATE TABLE `NAMESPACES` (
   `uid` int(11) NOT NULL,
-  `namespace` varchar(40) NOT NULL,
+  `namespace` varchar(20) NOT NULL,
   PRIMARY KEY (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
     """.execute.apply()
@@ -150,6 +161,7 @@ CREATE TABLE `ENTRIES` (
   `species` varchar(256) NOT NULL,
   `priority` INT NOT NULL,
   `label_ndx` INT  NOT NULL,
+  `ns_ndx` INT  NOT NULL,
   `source_ndx` INT NOT NULL,
   PRIMARY KEY (uid),
   INDEX `text_ndx` (`text`),
@@ -213,13 +225,13 @@ CREATE TABLE `TKEYS` (
   /** Use the Sources configuration to find and load the configured KB files. */
   def loadFiles: Int = {
     var total = 0
-    val kbFileLoader = new KBFileLoader(labelToIndexMap, nsToIndexMap)
+    val kbFileLoader = new KBFileLoader(this, labelToIndexMap, nsToIndexMap)
     checksOFF                               // turn off slow DB validation
     sourcesConfiguration.foreach { kbInfo =>
-      EntryBatcher.resetFileCount
+      entryBatcher.resetFileCount
       val kbTypeCode = kbFileLoader.loadFile(kbInfo)
-      val fileCnt = EntryBatcher.resetFileCount
-      total = EntryBatcher.flushBatch
+      val fileCnt = entryBatcher.resetFileCount
+      total = entryBatcher.flushBatch
       commitChanges                         // commit insertions for last KB
       if (Verbose) {
         val filename = kbInfo.filename
@@ -236,7 +248,7 @@ CREATE TABLE `TKEYS` (
     * immediately or entries may be batched for later writing, determined by
     * the batch size configuration parameter.
     */
-  def loadEntries (entries: Seq[KBEntry]): Unit = EntryBatcher.addBatch(entries)
+  def loadEntries (entries: Seq[KBEntry]): Unit = entryBatcher.addBatch(entries)
 
 
   /** Stream over the entries, transform each entry.text into one or more keys and
@@ -245,9 +257,9 @@ CREATE TABLE `TKEYS` (
     if (Verbose)  logger.info("Filling Keys table....")
     checksOFF                               // turn off slow DB validation
     sql"select uid, text from ENTRIES".fetchSize(BatchSize).foreach { rs =>
-      KeyBatcher.addBatch(generateKeyRows(rs.int("uid"), rs.string("text")))
+      keyBatcher.addBatch(generateKeyRows(rs.int("uid"), rs.string("text")))
     }
-    KeyBatcher.flushBatch
+    keyBatcher.flushBatch
     commitChangesAndRestoreChecks           // commit changes and restore DB validation
   }
 
@@ -281,18 +293,18 @@ CREATE TABLE `TKEYS` (
   }
 
 
-  //
-  // MAIN: Run the actions sequentially to execute the loading steps.
-  //
-  dropTables
-  createTables
-  loadLabels                                // load the KB labels table from config
-  loadNamespaces                            // load the KB namespaces table from config
-  loadSources                               // load the KB meta info table from config
-  var entCnt = 0
-  entCnt = loadFiles                        // the major work: load all KB data files
-  fillKeysTable
-  // shutdown                               // close down/cleanup the loader
-  if (Verbose)
-    logger.info(s"Finished loading all configured KB files. Total entities loaded: $entCnt")
+  /** The main method for this application. Run the actions to load the database.*/
+  def start: Unit = {
+    dropTables                              // drop existing tables from database
+    createTables                            // recreate database tables
+    loadLabels                              // load the KB labels table from config
+    loadNamespaces                          // load the KB namespaces table from config
+    loadSources                             // load the KB meta info table from config
+    var entCnt = 0
+    entCnt = loadFiles                      // the major work: load all KB data files
+    fillKeysTable
+    if (Verbose)
+      logger.info(s"Finished loading all configured KB files. Total entities loaded: $entCnt")
+  }
+
 }

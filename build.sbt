@@ -1,6 +1,6 @@
 name := "kbquery"
 
-version := "0.11.0"
+version := "0.14.0"
 
 scalaVersion := "2.11.8"
 
@@ -64,7 +64,7 @@ libraryDependencies ++= {
 }
 
 // main class is the server and not the KB loader
-mainClass in assembly := Some("org.clulab.kbquery.KBQueryServer")
+mainClass in assembly := Some("org.clulab.kbquery.KBQuery")
 
 // skip the tests when assembling the FAT JAR
 test in assembly := {}

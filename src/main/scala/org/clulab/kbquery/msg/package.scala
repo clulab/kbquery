@@ -2,6 +2,9 @@ package org.clulab.kbquery
 
 package object msg {
 
+  /** The default source filename string for KB entries. */
+  val DefaultSourceFilename: String = ""
+
   /** The default namespace string for KB entries. */
   val DefaultNamespace: String = "uaz"
 

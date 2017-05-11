@@ -11,7 +11,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Begin conversion to Scalike: counts and dumps working.
+  *   Last Modified: Redo queries for Scalike.
   */
 class DBManager (
 
@@ -30,48 +30,52 @@ class DBManager (
     config.getString("db.kbqdb.user"),
     config.getString("db.kbqdb.password")
   )
-  // DBs.setup('kbqdb)                         // Use with configured connection pool
+
+  /** The syntax to create entity results, without any constraints or binding parameters. */
+  val entityJoin: SQLSyntax = sqls"""
+SELECT tk.text, e.uid, e.text, ns.namespace, e.id, lbl.label,
+       e.is_gene_name, e.is_short_name, e.species, e.priority, s.filename
+FROM Tkeys tk
+JOIN Entries e on tk.entry_ndx = e.uid
+JOIN Labels lbl on e.label_ndx = lbl.uid
+JOIN Namespaces ns on e.ns_ndx = ns.uid
+JOIN Sources s on e.source_ndx = s.uid
+"""
+
+  /** The syntax to query synonyms by NS/ID, without any constraints or binding parameters. */
+  val synonymJoin: SQLSyntax = sqls"""
+SELECT tk.text, ns.namespace, e.id
+FROM Tkeys tk
+JOIN Entries e on tk.entry_ndx = e.uid
+JOIN Namespaces ns on e.ns_ndx = ns.uid
+"""
 
   /** Close down the database and cleanup before an exit. */
   def close: Unit = DBs.closeAll()
 
-  /** Run the given query and return matching KB entries. */
-  // def queryToKBEntries (query: Query[Entries, EntryType, Seq]): KBEntries = {
-  //   val data = theDB.run(query.result.map(rows => Entries.toKBEntries(rows)))
-  //   return Await.result(data, Duration.Inf)
-  // }
+  /** Return the (possibly empty) set of entities for the given ID string, in any namespace. */
+  def byId (id:String): Entities =
+    Entities(sql"${entityJoin} WHERE e.id = ${id}".map(rs => toEntity(rs)).list.apply())
 
-  /** Return the (possibly empty) set of KB entries for the given ID string, in any namespace. */
-  def byId (id:String): KBEntries = {
-    // queryToKBEntries(Entries.findById(id))
-    KBEntries(List.empty[KBEntry])          // TODO: REPLACE LATER
+  /** Return the (possibly empty) set of entities for the given namespace and ID string. */
+  def byNsAndId (ns:String, id:String): Entities = {
+    val nsl = ns.toLowerCase
+    Entities(sql"${entityJoin} WHERE e.id = ${id} and ns.namespace = ${nsl}".map(rs => toEntity(rs)).list.apply())
   }
 
-  /** Return the (possibly empty) set of KB entries for the given namespace and ID string. */
-  def byNsAndId (ns:String, id:String): KBEntries = {
-    // val nsNdx = namespaceToIndex.getOrElse(ns.toLowerCase, UnknownNamespace)
-    // queryToKBEntries(Entries.findByNsAndId(nsNdx, id))
-    KBEntries(List.empty[KBEntry])          // TODO: REPLACE LATER
-  }
+  /** Return the (possibly empty) set of all entities exactly matching the given text string. */
+  def byText (text:String): Entities =
+    Entities(sql"${entityJoin} WHERE tk.text = ${text}".map(rs => toEntity(rs)).list.apply())
 
-  /** Return the (possibly empty) set of all KB entries exactly matching the given text string. */
-  def byText (text:String): KBEntries = {
-    // queryToKBEntries(Entries.findByText(text))
-    KBEntries(List.empty[KBEntry])          // TODO: REPLACE LATER
-  }
-
-  /** Return the (possibly empty) set of all KB entries for the given text string. */
-  def byTextSet (textSet: Set[String]): KBEntries = {
-    // queryToKBEntries(Entries.findByTextSet(textSet))
-    KBEntries(List.empty[KBEntry])          // TODO: REPLACE LATER
-  }
+  /** Return the (possibly empty) set of all entities for the given text string. */
+  def byTextSet (textSet: Set[String]): Entities =
+    Entities(sql"${entityJoin} WHERE tk.text in (${textSet})".map(rs => toEntity(rs)).list.apply())
 
   /** Return the (possibly empty) set of textual synonyms for the given NS/ID string. */
   def synonyms (ns:String, id:String): Synonyms = {
-    // val nsNdx = namespaceToIndex.getOrElse(ns.toLowerCase, UnknownNamespace)
-    // val query = Entries.findSynonyms(nsNdx, id)
-    // val data = theDB.run(query.result.map(rows => Entries.toSynonyms(rows)))
-    Synonyms(List.empty[String])            // TODO: REPLACE LATER
+    val nsl = ns.toLowerCase
+    val synList = sql"${synonymJoin} WHERE e.id = ${id} and ns.namespace = ${nsl}".map(rs => toSynonym(rs)).list.apply()
+    Synonyms(synList.toSet.toList)
   }
 
 
@@ -113,24 +117,34 @@ class DBManager (
 
   /** Return the raw entries from the KB. WARNING: HUGE!.*/
   def dumpEntries: KBEntries =
-    KBEntries(sql"select * from ENTRIES".map(rs => toKBEntry(rs)).list.apply())
+    KBEntries(sql"select * from Entries".map(rs => toKBEntry(rs)).list.apply())
 
   /** Return all permuted text keys from the KB. WARNING: HUGE!.*/
   def dumpKeys: KBKeys =
-    KBKeys(sql"select * from TKEYS".map(rs => toKBKey(rs)).list.apply())
+    KBKeys(sql"select * from Tkeys".map(rs => toKBKey(rs)).list.apply())
 
   /** Return all entity labels from the KB. */
   def dumpLabels: KBLabels =
-    KBLabels(sql"select * from LABELS".map(rs => toKBLabel(rs)).list.apply())
+    KBLabels(sql"select * from Labels".map(rs => toKBLabel(rs)).list.apply())
 
   /** Return all entity labels from the KB. */
   def dumpNamespaces: KBNamespaces =
-    KBNamespaces(sql"select * from NAMESPACES".map(rs => toKBNamespace(rs)).list.apply())
+    KBNamespaces(sql"select * from Namespaces".map(rs => toKBNamespace(rs)).list.apply())
 
   /** Return all source information entries from the KB. */
   def dumpSources: KBSources =
-    KBSources(sql"select * from SOURCES".map(rs => toKBSource(rs)).list.apply())
+    KBSources(sql"select * from Sources".map(rs => toKBSource(rs)).list.apply())
 
+
+  /** Return a fully expanded entity object converted from the given database result set. */
+  private def toEntity (rs: WrappedResultSet): Entity = {
+    Entity(
+      rs.int("uid"), rs.string("text"), rs.string("namespace"),
+      rs.string("id"), rs.string("label"),
+      rs.boolean("is_gene_name"), rs.boolean("is_short_name"),
+      rs.string("species"), rs.int("priority"), rs.string("filename")
+    )
+  }
 
   /** Return a raw entry object converted from the given database result set. */
   private def toKBEntry (rs: WrappedResultSet): KBEntry =
@@ -153,5 +167,8 @@ class DBManager (
   /** Return a source object converted from the given database result set. */
   private def toKBSource (rs: WrappedResultSet): KBSource =
     KBSource(rs.int("uid"), rs.string("namespace"), rs.string("filename"), rs.string("label"))
+
+  /** Return a synonym string extracted from the given database result set. */
+  private def toSynonym (rs: WrappedResultSet): String = rs.string("text")
 
 }

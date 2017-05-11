@@ -3,9 +3,9 @@ package org.clulab.kbquery.msg
 import Species._
 
 /**
-  * Main class representing a single knowledge base entry.
+  * Data transfer classes representing objects shared between KB tables and applications.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Update for namespace table.
+  *   Last Modified: Rename containing file. Reorder classes.
   */
 case class KBEntry (
 
@@ -49,6 +49,28 @@ case class KBEntry (
 /** A set of knowledge base entries, mostly a result of querying the KB. */
 case class KBEntries (
   val entries: List[KBEntry]                // convey the set as a List for convenience
+) extends Message
+
+
+/**
+  * A class holding a transformed text string (key) representing a varient
+  * lexical form for an entity in the Entries table.
+  */
+case class KBKey (
+  /** A text string formed by perturbing the text field of the corresponding Entries text field. */
+  val text: String,
+
+  /** A foreign key field pointing to the main entry that this record is a key for. */
+  val entryNdx: Int
+) extends Message {
+
+  /** Convert this KBKey to a sequence of its member values. */
+  def toSeq: Seq[Any] = Seq(text, entryNdx)
+}
+
+/** A list of Key records. */
+case class KBKeys (
+  val sources: List[KBKey]
 ) extends Message
 
 
@@ -106,26 +128,4 @@ case class KBSource (
 /** A list of source information records. */
 case class KBSources (
   val sources: List[KBSource]
-) extends Message
-
-
-/**
-  * A class holding a transformed text string (key) representing a varient
-  * lexical form for an entity in the Entries table.
-  */
-case class KBKey (
-  /** A text string formed by perturbing the text field of the corresponding Entries text field. */
-  val text: String,
-
-  /** A foreign key field pointing to the main entry that this record is a key for. */
-  val entryNdx: Int
-) extends Message {
-
-  /** Convert this KBKey to a sequence of its member values. */
-  def toSeq: Seq[Any] = Seq(text, entryNdx)
-}
-
-/** A list of Key records. */
-case class KBKeys (
-  val sources: List[KBKey]
 ) extends Message

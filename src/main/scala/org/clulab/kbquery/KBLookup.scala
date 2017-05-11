@@ -8,7 +8,7 @@ import org.clulab.kbquery.KBKeyTransforms._
 /**
   * Singleton class implementing knowledge base lookup and manipulation methods.
   *   Written by: Tom Hicks. 3/25/2017.
-  *   Last Modified: Major refactoring to classes.
+  *   Last Modified: Add facade methods to count & dump labels and namespaces.
   */
 class KBLookup (
 
@@ -28,9 +28,14 @@ class KBLookup (
   //
   def countEntries: Map[String, Int] = dbManager.countEntries
   def countKeys: Map[String, Int] = dbManager.countKeys
+  def countLabels: Map[String, Int] = dbManager.countLabels
+  def countNamespaces: Map[String, Int] = dbManager.countNamespaces
   def countSources: Map[String, Int] = dbManager.countSources
+
   def dumpEntries: KBEntries = dbManager.dumpEntries
   def dumpKeys: KBKeys = dbManager.dumpKeys
+  def dumpLabels: KBLabels = dbManager.dumpLabels
+  def dumpNamespaces: KBNamespaces = dbManager.dumpNamespaces
   def dumpSources: KBSources = dbManager.dumpSources
 
 

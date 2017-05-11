@@ -9,8 +9,13 @@ date
 
 ##### GETs #####
 curl -s 'http://localhost:8888/version'; echo ""
-curl -s 'http://localhost:8888/countSources'; echo ""
 curl -s 'http://localhost:8888/countEntries'; echo ""
+curl -s 'http://localhost:8888/countKeys'; echo ""
+curl -s 'http://localhost:8888/countLabels'; echo ""
+curl -s 'http://localhost:8888/countNamespaces'; echo ""
+curl -s 'http://localhost:8888/countSources'; echo ""
+curl -s 'http://localhost:8888/dumpLabels' | wc
+curl -s 'http://localhost:8888/dumpNamespaces' | wc
 curl -s 'http://localhost:8888/dumpSources' | wc
 curl -s 'http://localhost:8888/kblu/byNsId?nsId=uniprot:P31749' | wc
 curl -s 'http://localhost:8888/kblu/synonyms?nsId=uniprot:P31749' | wc
@@ -37,8 +42,13 @@ curl -s 'http://localhost:8888/kblu/lookup?text=GTP' | wc
 
 ##### POSTs #####
 curl -s -XPOST 'http://localhost:8888/version'; echo ""
-curl -s -XPOST 'http://localhost:8888/countSources'; echo ""
 curl -s -XPOST 'http://localhost:8888/countEntries'; echo ""
+curl -s -XPOST 'http://localhost:8888/countKeys'; echo ""
+curl -s -XPOST 'http://localhost:8888/countLabels'; echo ""
+curl -s -XPOST 'http://localhost:8888/countNamespaces'; echo ""
+curl -s -XPOST 'http://localhost:8888/countSources'; echo ""
+curl -s -XPOST 'http://localhost:8888/dumpLabels' | wc
+curl -s -XPOST 'http://localhost:8888/dumpNamespaces' | wc
 curl -s -XPOST 'http://localhost:8888/dumpSources' | wc
 curl -s -XPOST 'http://localhost:8888/kblu/byNsId'    -d'{"nsId": "uniprot:P31749"}' -H "$PTYPE" | wc
 curl -s -XPOST 'http://localhost:8888/kblu/synonyms'  -d'{"nsId": "uniprot:P31749"}' -H "$PTYPE" | wc

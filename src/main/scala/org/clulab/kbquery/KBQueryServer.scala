@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 /**
   * App to query knowledge bases via Akka HTTP service.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Major refactoring to classes.
+  *   Last Modified: Pass configuration to DB manager ctor.
   */
 class KBQueryServer (
 
@@ -39,7 +39,7 @@ class KBQueryServer (
 
   /** The main method for this application. Start the server to serve up the database.*/
   def start: Unit = {
-    val dbManager = new DBManager
+    val dbManager = new DBManager(mixedConfig)
     val kbLookup = new KBLookup(dbManager)
     val kbqService = new KBQService(mixedConfig, kbLookup)
     kbqService.start                        // start the server

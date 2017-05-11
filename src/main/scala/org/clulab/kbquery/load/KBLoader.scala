@@ -1,6 +1,7 @@
 package org.clulab.kbquery.load
 
 import scala.collection.JavaConverters._
+
 import com.typesafe.config._
 import com.typesafe.scalalogging.LazyLogging
 
@@ -8,16 +9,14 @@ import scalikejdbc._
 import scalikejdbc.config._
 
 import org.clulab.kbquery.KBKeyTransforms._
-import org.clulab.kbquery.dao._
-import org.clulab.kbquery.msg._
-
 import org.clulab.kbquery.SubApplication
+import org.clulab.kbquery.msg._
 
 
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Major refactoring to classes.
+  *   Last Modified: Update for removal of DAO package.
   */
 class KBLoader (
 

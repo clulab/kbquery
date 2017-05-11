@@ -20,9 +20,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 
 /**
-  * Trait to provide an Akka HTTP service using Json4s support for marshalling.
+  * Class to provide an Akka HTTP service using Json4s support for marshalling.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
-  *   Last Modified: Major refactoring to classes.
+  *   Last Modified: Add calls to count & dump labels and namespaces.
   */
 class KBQService (
 
@@ -122,9 +122,25 @@ class KBQService (
             logger.info(s"GET countKeys")
             complete( kbLookup.countKeys )
           } ~
+          path("countLabels") {                     // count the KB label records
+            logger.info(s"GET countLabels")
+            complete( kbLookup.countLabels )
+          } ~
+          path("countNamespaces") {                 // count the KB namespace records
+            logger.info(s"GET countNamespaces")
+            complete( kbLookup.countNamespaces )
+          } ~
           path("countSources") {                    // count the KB source records
             logger.info(s"GET countSources")
             complete( kbLookup.countSources )
+          } ~
+          path("dumpLabels") {                      // dump the KB label records
+            logger.info(s"GET dumpLabels")
+            complete( kbLookup.dumpLabels )
+          } ~
+          path("dumpNamespaces") {                  // dump the KB namespace records
+            logger.info(s"GET dumpNamespaces")
+            complete( kbLookup.dumpNamespaces )
           } ~
           path("dumpSources") {                     // dump the KB source meta information
             logger.info(s"GET dumpSources")
@@ -187,17 +203,33 @@ class KBQService (
             logger.info(s"POST countKeys")
             complete( kbLookup.countKeys )
           } ~
+          path("countLabels") {                     // count the KB label records
+            logger.info(s"POST countLabels")
+            complete( kbLookup.countLabels )
+          } ~
+          path("countNamespaces") {                 // count the KB namespace records
+            logger.info(s"POST countNamespaces")
+            complete( kbLookup.countNamespaces )
+          } ~
           path("countSources") {                    // count the KB source records
             logger.info(s"POST countSources")
             complete( kbLookup.countSources )
           } ~
-          path("dumpEntries") {                     // dump the KB entry records
-            logger.info(s"POST dumpEntries")
-            complete( kbLookup.dumpEntries )
+          // path("dumpEntries") {                     // dump the KB entry records
+          //   logger.info(s"POST dumpEntries")
+          //   complete( kbLookup.dumpEntries )
+          // } ~
+          // path("dumpKeys") {                        // dump the KB key records
+          //   logger.info(s"POST dumpKeys")
+          //   complete( kbLookup.dumpKeys )
+          // } ~
+          path("dumpLabels") {                      // dump the KB label records
+            logger.info(s"POST dumpLabels")
+            complete( kbLookup.dumpLabels )
           } ~
-          path("dumpKeys") {                        // dump the KB key records
-            logger.info(s"POST dumpKeys")
-            complete( kbLookup.dumpKeys )
+          path("dumpNamespaces") {                  // dump the KB namespace records
+            logger.info(s"POST dumpNamespaces")
+            complete( kbLookup.dumpNamespaces )
           } ~
           path("dumpSources") {                     // dump the KB source meta information
             logger.info(s"POST dumpSources")

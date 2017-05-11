@@ -6,14 +6,13 @@ import java.util.zip.GZIPInputStream
 import scala.io.Source
 import com.typesafe.scalalogging.LazyLogging
 
-import org.clulab.kbquery.dao._
 import org.clulab.kbquery.msg._
 import org.clulab.kbquery.msg.Species._
 
 /**
   * Methods and utilities for reading and parsing KB files.
   *   Written by Tom Hicks. 3/29/2017.
-  *   Last Modified: Major refactoring: add parent loader class ctor argument.
+  *   Last Modified: Update for removal of DAO package.
   */
 class KBFileLoader (
 

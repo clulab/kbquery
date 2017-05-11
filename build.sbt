@@ -25,7 +25,7 @@ libraryDependencies ++= {
   val akkaV = "2.4.17"
   val akkaHTTPV = "10.0.5"
   val json4sV = "3.5.0"
-  val slickV = "3.2.0"
+  val scalikeV = "2.5.1"
 
   Seq(
     "com.typesafe"                 %  "config"                             % "1.3.0",
@@ -40,10 +40,8 @@ libraryDependencies ++= {
 
     // database
     "mysql"                        %  "mysql-connector-java"               % "5.1.38",
-    "org.scalikejdbc"             %%  "scalikejdbc"                        % "2.5.1",
-    "org.scalikejdbc"             %%  "scalikejdbc-config"                 % "2.5.1",
-    "com.typesafe.slick"          %%  "slick"                              % slickV,
-    "com.typesafe.slick"          %%  "slick-hikaricp"                     % slickV,
+    "org.scalikejdbc"             %%  "scalikejdbc"                        % scalikeV,
+    "org.scalikejdbc"             %%  "scalikejdbc-config"                 % scalikeV,
 
     // akka-http
     "com.typesafe.akka"           %%  "akka-http-core"                     % akkaHTTPV,

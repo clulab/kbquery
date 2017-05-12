@@ -51,7 +51,7 @@ libraryDependencies ++= {
 
     // testing
     "org.scalatest"               %%  "scalatest"                          % "2.2.6"   % "test",
-    "org.scalikejdbc"             %%  "scalikejdbc-test"                   % "2.5.1"   % "test",
+    "org.scalikejdbc"             %%  "scalikejdbc-test"                   % scalikeV  % "test",
     "com.typesafe.akka"           %%  "akka-testkit"                       % akkaV     % "test",
     "com.typesafe.akka"           %%  "akka-http-testkit"                  % akkaV     % "test",
 
@@ -61,7 +61,7 @@ libraryDependencies ++= {
   )
 }
 
-// main class is the server and not the KB loader
+// main app class: chooses between the server and the KB loader via an argument
 mainClass in assembly := Some("org.clulab.kbquery.KBQuery")
 
 // skip the tests when assembling the FAT JAR

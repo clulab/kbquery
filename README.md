@@ -25,16 +25,18 @@ To build a standalone JAR file in the target/scala-2.11 subdirectory:
    > sbt assembly
 ```
 
-To run the standalone JAR file using Java 1.8:
+To run the server from the standalone JAR file using Java 1.8:
 
 ```
-   > java -jar kbquery.jar
+   > java -jar kbquery.jar                  # use server defaults (localhost:8888)
+   OR
+   > java -jar kbquery.jar --port 8080      # specify an alternate server port
 ```
 
-To run from the command line with `sbt`:
+To run the server from the command line with `sbt`:
 
 ```
-   > sbt run                                # accepting defaults
+   > sbt run                                # use server defaults (localhost:8888)
    OR
    > sbt 'run --port 8080'                  # specify an alternate server port
 ```
@@ -42,45 +44,58 @@ To run from the command line with `sbt`:
 Run Options:
 
 ```
-Usage: kbquery [--host <hostname>]  [--port <port#>]
+Usage: kbquery [server|loader] [--host <hostname>]  [--port <port#>]
 
- -h, --host           Hostname for server (defaults to 'localhost')
- -p, --port           Port number to run server on (defaults to 8888)
+ server               Run the standalone KB server (this is the default)
+ loader               Load the SQL database from local knowledge base files
+ -h, --host           Hostname for server (defaults to 'localhost', not used by loader)
+ -p, --port           Port number to run server on (defaults to 8888, not used by loader)
 ```
 
 
 ## Database
 
-The KBQuery Server application uses a local [MySQL](http://mysql.org/) server
-as the database and [Slick](http://slick.lightbend.com/) and
-[ScalikeJDBC](http://scalikejdbc.org/) as the database access libraries.
+The KBQuery Server application uses a [MySQL](http://mysql.org/) installation for the
+database and [ScalikeJDBC](http://scalikejdbc.org/) as the database access library.
 
 
 ### Building a new Database
 
-To build a new database, you must use `sbt` to build and run a different main
-class; the `KBLoader`. To run the `KBLoader` class from the command line with `sbt`:
+To build and load a new database, you must use specify the `loader` option to the
+KBQuery application.
+
+**NOTE:** If you choose to re-run the `loader` program to reload the database,
+**all existing tables and contents will be deleted**.
+
+To run the `loader` from the standalone JAR file using Java 1.8:
 
 ```
-   > sbt 'run-main org.clulab.kbquery.load.KBLoader'
+   > java -jar kbquery.jar loader
+```
+
+To run the `loader` from the command line with `sbt`:
+
+```
+   > sbt 'run-main org.clulab.kbquery.KBQuery loader'
 
 ```
 
-By default, the `KBLoader` program expects its `Bioresources` input KB files to
+By default, the `loader` program expects its `Bioresources` input KB files to
 be located in a subdirectory of the startup directory named `KBs`. (__Note:__ the
 subdirectory `KBs` can simply be a symbolic link to the `Bioresources` directory
 `bioresources/src/main/resources/org/clulab/reach/kb`).
 
-The name of the created database is, by default, `kbqdb`. The `KBLoader` and
-database parameters can be changed in the `application.conf` configuration file.
+The name of the created database is, by default, `kbqdb`. This and other `server`,
+`loader`, and database parameters can be changed in the `application.conf`
+configuration file.
 
-**NOTE:** If you choose to re-run `KBLoader` to reload the database, **all
-existing tables and contents will be deleted**.
+**NOTE:** If you choose to re-run the `loader` program to reload the database,
+**all existing tables and contents will be deleted**.
 
 
 ### Saving the Database
 
-Once the MySQL database has been loaded, it can be backedup, moved to another
+Once the MySQL database has been loaded, it can be backed up, moved to another
 MySQL server, and/or reloaded very quickly using the MySQL Dump utility.
 A utility shell script to dump the `kbqdb` database is located in the
 `kbquery/src/main/resources/sql` subdirectory. This directory also contains an
@@ -95,8 +110,5 @@ SQL script to initially create the `kbqdb` database and its dedicated user.
 KBQuery Server is licensed under the Apache License, Version 2.0.
 
 ScalikeJDBC is also licensed under the Apache License, Version 2.0.
-
-A copy of the [Slick license](https://github.com/slick/slick/blob/master/LICENSE.txt)
-is provided in the LICENSES subdirectory.
 
 (c) Copyright by The University of Arizona, 2017. All rights reserved.

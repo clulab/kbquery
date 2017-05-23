@@ -13,7 +13,7 @@ package object msg {
   val DefaultSourceFilename: String = ""
 
   /** The default configuration list of key transforms, for KB entries. */
-  val DefaultTransformsList: List[String] = List("identity", "canonical")
+  val DefaultTransformsList: List[String] = List.empty[String]
 
   /** The priority level for entries in an override KB.
       Priority levels: 0 = normal, higher numbers = higher priority. */

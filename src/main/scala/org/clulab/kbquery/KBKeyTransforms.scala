@@ -3,7 +3,7 @@ package org.clulab.kbquery
 /**
   * Methods for transforming text strings into potential keys for lookup in KBs.
   *   Written by: Tom Hicks. 10/22/2015.
-  *   Last Modified: Initial port to KBQuery project.
+  *   Last Modified: Add map for names to basic transforms.
   */
 trait KBKeyTransforms {
   import org.clulab.kbquery.KBKeyTransforms._
@@ -16,6 +16,13 @@ trait KBKeyTransforms {
 
   /** A key transform which implements a minimal canonicalization function for Strings. */
   def lowercaseKT (text:String): KeyCandidates = toKeyCandidates(text.toLowerCase)
+
+  /** Map a name string to an associated key transform function. */
+  val nameToKeyTransformMap: Map[String, KeyTransformFn] = Map (
+    ("identity" -> identityKT),
+    ("canonical" -> canonicalKT),
+    ("lowercase" -> lowercaseKT)
+  )
 
 
   /** Canonicalize the given text string into a key for both storage and lookup. */

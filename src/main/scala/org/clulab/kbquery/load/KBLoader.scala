@@ -16,7 +16,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Begin to read key transforms from configuration.
+  *   Last Modified: Map from source configuration to list of key transformations.
   */
 class KBLoader (
 
@@ -80,10 +80,21 @@ class KBLoader (
       val namespace = src.getString("ns")
       val filename = src.getString("filename")
       val label = src.getString("label")
-      val transforms = src.getStringList("keys").asScala.toList
+      val transforms = if (src.hasPath("keys")) src.getStringList("keys").asScala.toList
+                       else DefaultTransformsList
       KBSource(id, namespace, filename, label, transforms)
     }.toList
   }
+
+  /** Map from a source index to a list of key transformations for that source. */
+  private val sourceIndexToKeyTransforms: Map[Int, KeyTransforms] = {
+    sourcesConfiguration.map { src =>
+      val ktList = src.transforms.flatMap { name => nameToKeyTransformMap.get(name.toLowerCase) }
+      val keyTransforms = if (ktList.nonEmpty) ktList else DefaultKeyTransforms
+      ( src.id -> keyTransforms )
+    }.toMap
+  }
+
 
   /** Drop the tables if they exist. */
   def dropTables: Unit = {
@@ -265,7 +276,8 @@ CREATE TABLE `TKEYS` (
 
   /** Return a sequence of key row objects created from the given UID and text string. */
   def generateKeyRows (uid:Int, text:String, sourceNdx:Int): Seq[KBKey] = {
-    val textSet = applyAllTransforms(DefaultKeyTransforms, text).toSet.toSeq
+    val keyTransforms = sourceIndexToKeyTransforms.getOrElse(sourceNdx, DefaultKeyTransforms)
+    val textSet = applyAllTransforms(keyTransforms, text).toSet.toSeq
     textSet.map { tkey => KBKey(tkey, uid) }
   }
 

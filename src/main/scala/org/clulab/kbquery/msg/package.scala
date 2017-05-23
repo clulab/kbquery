@@ -2,15 +2,18 @@ package org.clulab.kbquery
 
 package object msg {
 
-  /** The default source filename string for KB entries. */
-  val DefaultSourceFilename: String = ""
-
   /** The default namespace string for KB entries. */
   val DefaultNamespace: String = "uaz"
 
   /** The default priority level for entries in the KB.
       Priority levels: 0 = normal, higher numbers = higher priority. */
   val DefaultPriority: Int = 0
+
+  /** The default source filename string for KB entries. */
+  val DefaultSourceFilename: String = ""
+
+  /** The default configuration list of key transforms, for KB entries. */
+  val DefaultTransformsList: List[String] = List("identity", "canonical")
 
   /** The priority level for entries in an override KB.
       Priority levels: 0 = normal, higher numbers = higher priority. */

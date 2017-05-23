@@ -16,7 +16,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton app to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Update for removal of DAO package.
+  *   Last Modified: Begin to read key transforms from configuration.
   */
 class KBLoader (
 
@@ -80,7 +80,8 @@ class KBLoader (
       val namespace = src.getString("ns")
       val filename = src.getString("filename")
       val label = src.getString("label")
-      KBSource(id, namespace, filename, label)
+      val transforms = src.getStringList("keys").asScala.toList
+      KBSource(id, namespace, filename, label, transforms)
     }.toList
   }
 
@@ -255,15 +256,15 @@ CREATE TABLE `TKEYS` (
   def fillKeysTable: Unit = {
     if (Verbose)  logger.info("Filling Keys table....")
     checksOFF                               // turn off slow DB validation
-    sql"select uid, text from ENTRIES".fetchSize(BatchSize).foreach { rs =>
-      keyBatcher.addBatch(generateKeyRows(rs.int("uid"), rs.string("text")))
+    sql"select uid, text, source_ndx from ENTRIES".fetchSize(BatchSize).foreach { rs =>
+      keyBatcher.addBatch(generateKeyRows(rs.int("uid"), rs.string("text"), rs.int("source_ndx")))
     }
     keyBatcher.flushBatch
     commitChangesAndRestoreChecks           // commit changes and restore DB validation
   }
 
   /** Return a sequence of key row objects created from the given UID and text string. */
-  def generateKeyRows (uid: Int, text: String): Seq[KBKey] = {
+  def generateKeyRows (uid:Int, text:String, sourceNdx:Int): Seq[KBKey] = {
     val textSet = applyAllTransforms(DefaultKeyTransforms, text).toSet.toSeq
     textSet.map { tkey => KBKey(tkey, uid) }
   }

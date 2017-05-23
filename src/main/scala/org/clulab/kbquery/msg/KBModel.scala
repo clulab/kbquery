@@ -5,7 +5,7 @@ import Species._
 /**
   * Data transfer classes representing objects shared between KB tables and applications.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Rename containing file. Reorder classes.
+  *   Last Modified: Add key transforms list to KBSource.
   */
 case class KBEntry (
 
@@ -122,7 +122,10 @@ case class KBSource (
   val filename: String,
 
   /** The entity type label for every entry in the KB (empty for override or mixed-label KBs). */
-  val label: String = NoImplicitLabel
+  val label: String = NoImplicitLabel,
+
+  /** A list of key transforms to be applied to the entity text of this KB source. */
+  val transforms: List[String] = DefaultTransformsList
 )
 
 /** A list of source information records. */

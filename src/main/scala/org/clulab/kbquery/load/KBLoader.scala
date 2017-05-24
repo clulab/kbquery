@@ -14,9 +14,9 @@ import org.clulab.kbquery.msg._
 
 
 /**
-  * Singleton app to load data into the KBQuery DB.
+  * Sub application to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Map from source configuration to list of key transformations.
+  *   Last Modified: Load key transforms string into Sources database.
   */
 class KBLoader (
 
@@ -158,6 +158,7 @@ CREATE TABLE `SOURCES` (
   `namespace` varchar(20) NOT NULL,
   `filename` varchar(60) NOT NULL,
   `label` varchar(40) NOT NULL,
+  `transforms` varchar(256) NOT NULL,
   PRIMARY KEY (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
     """.execute.apply()
@@ -226,8 +227,10 @@ CREATE TABLE `TKEYS` (
   def loadSources (implicit session:DBSession = AutoSession): Unit = {
     checksOFF                               // turn off slow DB validation
     sourcesConfiguration.foreach { src =>
-      sql"""insert into Sources values (
-              ${src.id}, ${src.namespace}, ${src.filename}, ${src.label})""".update.apply()
+      val transforms = src.transforms.mkString(",")
+      sql"""
+insert into Sources values
+  (${src.id}, ${src.namespace}, ${src.filename}, ${src.label}, ${transforms})""".update.apply()
     }
     commitChanges                           // commit insertions
   }

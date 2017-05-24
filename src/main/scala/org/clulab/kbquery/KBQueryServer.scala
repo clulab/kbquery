@@ -6,7 +6,7 @@ import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
 import com.typesafe.scalalogging.LazyLogging
 
 /**
-  * App to query knowledge bases via Akka HTTP service.
+  * Sub application to query knowledge bases via Akka HTTP service.
   *   Written by: Tom Hicks from code by Gus Hahn-Powell. 3/24/2016.
   *   Last Modified: Pass configuration to DB manager ctor.
   */

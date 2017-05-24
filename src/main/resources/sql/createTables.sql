@@ -23,6 +23,7 @@ CREATE TABLE `SOURCES` (
   `namespace` varchar(20) NOT NULL,
   `filename` varchar(60) NOT NULL,
   `label` varchar(40) NOT NULL,
+  `transforms` varchar(256) NOT NULL,
   PRIMARY KEY (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 

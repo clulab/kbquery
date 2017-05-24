@@ -11,7 +11,7 @@ import org.clulab.kbquery.msg._
 /**
   * Singleton class implementing the database management backend for this app.
   *   Written by: Tom Hicks. 3/27/2017.
-  *   Last Modified: Redo queries for Scalike.
+  *   Last Modified: Update method to convert result set to KBSource object.
   */
 class DBManager (
 
@@ -165,8 +165,14 @@ JOIN Namespaces ns on e.ns_ndx = ns.uid
     KBNamespace(rs.int("uid"), rs.string("namespace"))
 
   /** Return a source object converted from the given database result set. */
-  private def toKBSource (rs: WrappedResultSet): KBSource =
-    KBSource(rs.int("uid"), rs.string("namespace"), rs.string("filename"), rs.string("label"))
+  private def toKBSource (rs: WrappedResultSet): KBSource = {
+    val tList = rs.string("transforms").trim
+    if (tList.nonEmpty)
+      KBSource(rs.int("uid"), rs.string("namespace"), rs.string("filename"),
+               rs.string("label"), tList.split(",").toList)
+    else
+      KBSource(rs.int("uid"), rs.string("namespace"), rs.string("filename"), rs.string("label"))
+  }
 
   /** Return a synonym string extracted from the given database result set. */
   private def toSynonym (rs: WrappedResultSet): String = rs.string("text")

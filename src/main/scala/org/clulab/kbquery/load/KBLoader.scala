@@ -16,7 +16,7 @@ import org.clulab.kbquery.msg._
 /**
   * Sub application to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Load key transforms string into Sources database.
+  *   Last Modified: Update for rename to transforms in application.conf file.
   */
 class KBLoader (
 
@@ -80,7 +80,7 @@ class KBLoader (
       val namespace = src.getString("ns")
       val filename = src.getString("filename")
       val label = src.getString("label")
-      val transforms = if (src.hasPath("keys")) src.getStringList("keys").asScala.toList
+      val transforms = if (src.hasPath("transforms")) src.getStringList("transforms").asScala.toList
                        else DefaultTransformsList
       KBSource(id, namespace, filename, label, transforms)
     }.toList

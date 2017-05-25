@@ -16,7 +16,7 @@ import org.clulab.kbquery.msg._
 /**
   * Sub application to load data into the KBQuery DB.
   *   Written by: Tom Hicks. 3/28/2017.
-  *   Last Modified: Update for rename to transforms in application.conf file.
+  *   Last Modified: Update for refactored name list to key transforms method.
   */
 class KBLoader (
 
@@ -89,9 +89,7 @@ class KBLoader (
   /** Map from a source index to a list of key transformations for that source. */
   private val sourceIndexToKeyTransforms: Map[Int, KeyTransforms] = {
     sourcesConfiguration.map { src =>
-      val ktList = src.transforms.flatMap { name => nameToKeyTransformMap.get(name.toLowerCase) }
-      val keyTransforms = if (ktList.nonEmpty) ktList else DefaultKeyTransforms
-      ( src.id -> keyTransforms )
+      ( src.id -> nameListToKeyTransforms(src.transforms) )
     }.toMap
   }
 

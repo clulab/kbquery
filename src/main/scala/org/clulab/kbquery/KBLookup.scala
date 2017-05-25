@@ -1,6 +1,9 @@
 package org.clulab.kbquery
 
+import scala.collection.JavaConverters._
+
 import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.config.Config
 
 import org.clulab.kbquery.msg._
 import org.clulab.kbquery.KBKeyTransforms._
@@ -8,9 +11,12 @@ import org.clulab.kbquery.KBKeyTransforms._
 /**
   * Singleton class implementing knowledge base lookup and manipulation methods.
   *   Written by: Tom Hicks. 3/25/2017.
-  *   Last Modified: Update for entity results.
+  *   Last Modified: Read lookup key transforms from the config file.
   */
 class KBLookup (
+
+  /** Application configuration. */
+  config: Config,
 
   /** Class incorporating the specifics of a particular DB implementation. */
   dbManager: DBManager
@@ -22,6 +28,13 @@ class KBLookup (
 
   /** Constant denoting an empty set of strings. */
   val NoTexts: List[String] = List.empty[String]
+
+  /** A list of the names of all key transforms used in the Sources table. */
+  val lookupKeyTransforms: KeyTransforms =
+    if (config.hasPath("app.lookup.transforms"))
+      nameListToKeyTransforms(config.getStringList("app.lookup.transforms").asScala.toList)
+    else
+      DefaultKeyTransforms
 
 
   // Facade pass-thru calls:
@@ -70,7 +83,7 @@ class KBLookup (
   /** Return the (possibly empty) set of all entities with a text key string
       that loosely matches the given text string. */
   def lookup (text: String): Entities = {
-    val textSet = applyAllTransforms(DefaultKeyTransforms, text).toSet
+    val textSet = applyAllTransforms(lookupKeyTransforms, text).toSet
     if (textSet.nonEmpty)
       dbManager.byTextSet(textSet)
     else

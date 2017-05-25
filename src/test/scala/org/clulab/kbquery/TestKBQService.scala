@@ -22,7 +22,7 @@ import org.clulab.kbquery.msg._
 /**
   * Unit tests of the KBQ service class.
   *   Written by: Tom Hicks. 3/26/2017.
-  *   Last Modified: Update for major refactoring.
+  *   Last Modified: Update for configurable transforms.
   */
 class TestKBQService extends WordSpec
     with Matchers
@@ -42,7 +42,7 @@ class TestKBQService extends WordSpec
   val GGP_LABEL = "Gene_or_gene_product"
 
   val dbManager = new DBManager(config)
-  val kbLookup = new KBLookup(dbManager)
+  val kbLookup = new KBLookup(config, dbManager)
   val kbqService = new KBQService(config, kbLookup)
   val route = kbqService.makeRoute(config)  // create the service route to test
 

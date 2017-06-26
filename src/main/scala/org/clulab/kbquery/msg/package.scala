@@ -1,5 +1,10 @@
 package org.clulab.kbquery
 
+/**
+  * Package object for the message package of the KB Query application.
+  *   Written by: Tom Hicks. 3/25/2017.
+  *   Last Modified: Redo the parse namespace/ID logic.
+  */
 package object msg {
 
   /** The default namespace string for KB entries. */
@@ -44,7 +49,10 @@ package object msg {
   /** Return a (possibly empty) list containing the namespace and ID from the given NS/ID string. */
   def parseNamespaceId (nsId: String): List[String] = {
     val parts = nsId.split(NamespaceIdSeparator).toList
-    if (parts.size == 2) parts else List[String]()
+    val len = parts.size
+    if (len == 2) parts
+    else if (len > 2) List(parts(0), parts.drop(1).mkString(":"))
+    else List[String]()
   }
 
 
